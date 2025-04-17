@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <title>Chat de Supabase</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
         .user-list {
             margin-top: 20px;
             border: 1px solid #ccc;
@@ -20,30 +26,77 @@
         .user-item:hover {
             background-color: #e0e0e0;
         }
+        .hidden {
+            display: none;
+        }
+        .message-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .user-info {
+            background-color: #eaf7ff;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .logout-btn {
+            margin-left: 10px;
+            cursor: pointer;
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+        }
+        input, button {
+            padding: 5px;
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
-    <h1>Prueba de Chat Supabase</h1>
+    <h1>Chat de Supabase</h1>
     
-    <h2>Registrar usuario</h2>
-    <input type="text" id="alias" placeholder="Alias">
-    <button onclick="registrarUsuario()">Registrar</button>
-    
-    <h2>Lista de Usuarios</h2>
-    <button onclick="cargarUsuarios()">Actualizar Lista de Usuarios</button>
-    <div id="user-list" class="user-list">
-        <!-- Aquí se mostrarán los usuarios -->
+    <!-- Panel de usuario conectado -->
+    <div id="user-panel" class="hidden user-info">
+        <span>Conectado como: <strong id="current-user-name"></strong> (ID: <span id="current-user-id"></span>)</span>
+        <button class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
     
-    <h2>Enviar mensaje</h2>
-    <input type="number" id="remitente" placeholder="ID Remitente">
-    <input type="number" id="destinatario" placeholder="ID Destinatario">
-    <input type="text" id="texto" placeholder="Mensaje">
-    <button onclick="enviarMensaje()">Enviar</button>
+    <!-- Panel de registro/login -->
+    <div id="auth-panel">
+        <h2>Iniciar sesión / Registrarse</h2>
+        <div>
+            <input type="text" id="login-alias" placeholder="Ingresa tu alias">
+            <button onclick="iniciarSesion()">Iniciar Sesión</button>
+            <button onclick="registrarUsuario()">Registrarse</button>
+        </div>
+    </div>
     
-    <h2>Ver mensajes</h2>
-    <button onclick="listarMensajes()">Mostrar todos</button>
-    <ul id="lista"></ul>
+    <!-- Panel de chat (visible solo cuando está conectado) -->
+    <div id="chat-panel" class="hidden">
+        <h2>Lista de Usuarios</h2>
+        <button onclick="cargarUsuarios()">Actualizar Lista de Usuarios</button>
+        <div id="user-list" class="user-list">
+            <!-- Aquí se mostrarán los usuarios -->
+        </div>
+        
+        <h2>Enviar mensaje</h2>
+        <div>
+            <select id="destinatario-select">
+                <option value="">Selecciona un destinatario</option>
+            </select>
+            <input type="text" id="texto" placeholder="Escribe tu mensaje">
+            <button onclick="enviarMensaje()">Enviar</button>
+        </div>
+        
+        <h2>Mensajes</h2>
+        <button onclick="listarMensajes()">Actualizar Mensajes</button>
+        <div id="lista" class="message-box"></div>
+    </div>
     
     <!-- Primero carga la librería de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
@@ -55,37 +108,155 @@
         // Usar createClient desde el objeto global importado
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
         
-        // Cargar lista de usuarios al iniciar la página
-        window.onload = function() {
-            cargarUsuarios();
+        // Variables para el usuario actual
+        let currentUser = null;
+        
+        // Cargar sesión al iniciar la página
+        window.onload = async function() {
+            await cargarSesion();
+            await cargarUsuarios();
+            await listarMensajes();
         };
         
-        async function registrarUsuario() {
-            const alias = document.getElementById('alias').value;
+        // Función para cargar la sesión del usuario desde localStorage
+        async function cargarSesion() {
+            const userId = localStorage.getItem('userId');
+            const userAlias = localStorage.getItem('userAlias');
+            
+            if (userId && userAlias) {
+                // Verificar que el usuario sigue existiendo en la base de datos
+                const { data, error } = await supabaseClient
+                    .from('usuarios')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+                
+                if (data && !error) {
+                    // Establecer sesión
+                    currentUser = data;
+                    mostrarPanelUsuario();
+                } else {
+                    // Si el usuario no existe, limpiar localStorage
+                    localStorage.removeItem('userId');
+                    localStorage.removeItem('userAlias');
+                    ocultarPanelUsuario();
+                }
+            } else {
+                ocultarPanelUsuario();
+            }
+        }
+        
+        // Mostrar panel de usuario y ocultar panel de autenticación
+        function mostrarPanelUsuario() {
+            document.getElementById('user-panel').classList.remove('hidden');
+            document.getElementById('chat-panel').classList.remove('hidden');
+            document.getElementById('auth-panel').classList.add('hidden');
+            
+            document.getElementById('current-user-name').textContent = currentUser.alias;
+            document.getElementById('current-user-id').textContent = currentUser.id;
+        }
+        
+        // Ocultar panel de usuario y mostrar panel de autenticación
+        function ocultarPanelUsuario() {
+            document.getElementById('user-panel').classList.add('hidden');
+            document.getElementById('chat-panel').classList.add('hidden');
+            document.getElementById('auth-panel').classList.remove('hidden');
+            currentUser = null;
+        }
+        
+        // Cerrar sesión
+        function cerrarSesion() {
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userAlias');
+            ocultarPanelUsuario();
+        }
+        
+        // Iniciar sesión con alias existente
+        async function iniciarSesion() {
+            const alias = document.getElementById('login-alias').value;
             if (!alias) {
                 alert('Por favor ingresa un alias');
                 return;
             }
             
-            let { data, error } = await supabaseClient.from('usuarios').insert([
-                { alias: alias }
-            ]).select();
+            // Buscar usuario por alias
+            const { data, error } = await supabaseClient
+                .from('usuarios')
+                .select('*')
+                .eq('alias', alias)
+                .maybeSingle();
+            
+            if (error) {
+                alert('Error buscando usuario: ' + error.message);
+                return;
+            }
+            
+            if (!data) {
+                alert('Usuario no encontrado. ¿Quieres registrarte?');
+                return;
+            }
+            
+            // Guardar sesión
+            localStorage.setItem('userId', data.id);
+            localStorage.setItem('userAlias', data.alias);
+            currentUser = data;
+            
+            alert('¡Sesión iniciada correctamente!');
+            mostrarPanelUsuario();
+            cargarUsuarios();
+            listarMensajes();
+        }
+        
+        // Registrar nuevo usuario
+        async function registrarUsuario() {
+            const alias = document.getElementById('login-alias').value;
+            if (!alias) {
+                alert('Por favor ingresa un alias');
+                return;
+            }
+            
+            // Verificar si el alias ya existe
+            const { data: existingUser } = await supabaseClient
+                .from('usuarios')
+                .select('*')
+                .eq('alias', alias)
+                .maybeSingle();
+            
+            if (existingUser) {
+                alert('Este alias ya está en uso. Por favor elige otro o inicia sesión.');
+                return;
+            }
+            
+            // Registrar nuevo usuario
+            const { data, error } = await supabaseClient
+                .from('usuarios')
+                .insert([{ alias: alias }])
+                .select();
             
             if (error) {
                 alert('Error: ' + error.message);
                 console.error(error);
-            } else {
+                return;
+            }
+            
+            if (data && data.length > 0) {
+                // Guardar sesión
+                localStorage.setItem('userId', data[0].id);
+                localStorage.setItem('userAlias', data[0].alias);
+                currentUser = data[0];
+                
                 alert('¡Usuario registrado con éxito!');
-                document.getElementById('alias').value = '';
-                cargarUsuarios(); // Actualizar la lista de usuarios
+                mostrarPanelUsuario();
+                cargarUsuarios();
             }
         }
         
+        // Cargar lista de usuarios
         async function cargarUsuarios() {
             const { data, error } = await supabaseClient
                 .from('usuarios')
                 .select('*')
-                .order('id');
+                .order('alias');
                 
             if (error) {
                 console.error('Error cargando usuarios:', error);
@@ -93,7 +264,11 @@
             }
             
             const userListDiv = document.getElementById('user-list');
+            const destinatarioSelect = document.getElementById('destinatario-select');
+            
+            // Limpiar listas
             userListDiv.innerHTML = '';
+            destinatarioSelect.innerHTML = '<option value="">Selecciona un destinatario</option>';
             
             if (data.length === 0) {
                 userListDiv.innerHTML = '<p>No hay usuarios registrados</p>';
@@ -101,69 +276,102 @@
             }
             
             data.forEach(user => {
+                // No mostrar al usuario actual en la lista
+                if (currentUser && user.id === currentUser.id) return;
+                
+                // Añadir a la lista visual
                 const userDiv = document.createElement('div');
                 userDiv.className = 'user-item';
-                userDiv.textContent = `ID: ${user.id} - ${user.alias}`;
+                userDiv.textContent = `${user.alias} (ID: ${user.id})`;
                 userDiv.onclick = function() {
-                    document.getElementById('destinatario').value = user.id;
+                    destinatarioSelect.value = user.id;
                 };
                 userListDiv.appendChild(userDiv);
+                
+                // Añadir al selector de destinatario
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = user.alias;
+                destinatarioSelect.appendChild(option);
             });
         }
         
+        // Enviar mensaje
         async function enviarMensaje() {
-            const remitente = parseInt(document.getElementById('remitente').value);
-            const destinatario = parseInt(document.getElementById('destinatario').value);
+            if (!currentUser) {
+                alert('Debes iniciar sesión para enviar mensajes');
+                return;
+            }
+            
+            const destinatario = document.getElementById('destinatario-select').value;
             const texto = document.getElementById('texto').value;
             
-            if (!remitente || !destinatario || !texto) {
-                alert('Por favor completa todos los campos');
+            if (!destinatario || !texto) {
+                alert('Por favor selecciona un destinatario y escribe un mensaje');
                 return;
             }
             
             let { data, error } = await supabaseClient.from('mensajes').insert([
-                { remitente_id: remitente, destinatario_id: destinatario, mensaje: texto }
+                { remitente_id: currentUser.id, destinatario_id: destinatario, mensaje: texto }
             ]);
             
             if (error) {
                 alert('Error: ' + error.message);
                 console.error(error);
             } else {
-                alert('¡Mensaje enviado correctamente!');
                 document.getElementById('texto').value = '';
-                listarMensajes(); // Actualizar la lista de mensajes
+                listarMensajes();
             }
         }
         
+        // Listar mensajes
         async function listarMensajes() {
+            if (!currentUser) return;
+            
+            // Obtener mensajes donde el usuario actual es remitente o destinatario
             let { data, error } = await supabaseClient
                 .from('mensajes')
                 .select('*, remitente:remitente_id(alias), destinatario:destinatario_id(alias)')
+                .or(`remitente_id.eq.${currentUser.id},destinatario_id.eq.${currentUser.id}`)
                 .order('enviado_en', { ascending: false });
                 
             const lista = document.getElementById('lista');
             lista.innerHTML = '';
             
             if (error) {
-                alert('Error: ' + error.message);
-                console.error(error);
+                console.error('Error cargando mensajes:', error);
                 return;
             }
             
             if (data.length === 0) {
-                lista.innerHTML = '<li>No hay mensajes</li>';
+                lista.innerHTML = '<p>No hay mensajes</p>';
                 return;
             }
             
             data.forEach(msg => {
-                const li = document.createElement('li');
+                const li = document.createElement('div');
                 const fechaFormateada = new Date(msg.enviado_en).toLocaleString();
                 
                 // Usar los alias en lugar de solo los IDs
                 const remitenteAlias = msg.remitente ? msg.remitente.alias : 'Usuario ' + msg.remitente_id;
                 const destinatarioAlias = msg.destinatario ? msg.destinatario.alias : 'Usuario ' + msg.destinatario_id;
                 
-                li.textContent = `De ${remitenteAlias} (ID: ${msg.remitente_id}) a ${destinatarioAlias} (ID: ${msg.destinatario_id}): ${msg.mensaje} (${fechaFormateada})`;
+                // Destacar mensajes propios
+                if (msg.remitente_id === currentUser.id) {
+                    li.style.textAlign = 'right';
+                    li.style.backgroundColor = '#dcf8c6';
+                    li.style.padding = '5px';
+                    li.style.margin = '5px 0';
+                    li.style.borderRadius = '5px';
+                    li.innerHTML = `<strong>Tú → ${destinatarioAlias}</strong>: ${msg.mensaje}<br><small>${fechaFormateada}</small>`;
+                } else {
+                    li.style.backgroundColor = '#f0f0f0';
+                    li.style.padding = '5px';
+                    li.style.margin = '5px 0';
+                    li.style.borderRadius = '5px';
+                    li.innerHTML = `<strong>${remitenteAlias} → Tú</strong>: ${msg.mensaje}<br><small>${fechaFormateada}</small>`;
+                }
+                
                 lista.appendChild(li);
             });
         }
