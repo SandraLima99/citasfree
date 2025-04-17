@@ -6,54 +6,149 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
+            background-color: #1e1e2e;
+            color: #cdd6f4;
         }
+        
+        h1, h2 {
+            color: #89b4fa;
+        }
+        
         .user-list {
             margin-top: 20px;
-            border: 1px solid #ccc;
+            border: 1px solid #45475a;
             padding: 10px;
-            max-height: 200px;
-            overflow-y: auto;
+            background-color: #313244;
+            border-radius: 5px;
         }
+        
         .user-item {
             cursor: pointer;
-            padding: 5px;
-            margin: 2px 0;
-            background-color: #f0f0f0;
+            padding: 8px;
+            margin: 4px 0;
+            background-color: #45475a;
+            border-radius: 4px;
+            transition: background-color 0.2s;
         }
+        
         .user-item:hover {
-            background-color: #e0e0e0;
+            background-color: #585b70;
         }
+        
+        .user-item.active {
+            background-color: #89b4fa;
+            color: #1e1e2e;
+        }
+        
         .hidden {
             display: none;
         }
+        
         .message-box {
-            border: 1px solid #ccc;
+            border: 1px solid #45475a;
             padding: 10px;
             margin-top: 10px;
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
+            background-color: #313244;
+            border-radius: 5px;
         }
+        
         .user-info {
-            background-color: #eaf7ff;
+            background-color: #313244;
             padding: 10px;
             margin-bottom: 20px;
             border-radius: 5px;
+            border: 1px solid #45475a;
         }
+        
         .logout-btn {
             margin-left: 10px;
             cursor: pointer;
-            background-color: #ff6b6b;
-            color: white;
+            background-color: #f38ba8;
+            color: #1e1e2e;
             border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-weight: bold;
         }
-        input, button {
-            padding: 5px;
+        
+        input, button, select {
+            padding: 8px;
             margin: 5px 0;
+            background-color: #45475a;
+            color: #cdd6f4;
+            border: 1px solid #585b70;
+            border-radius: 4px;
+        }
+        
+        button {
+            background-color: #89b4fa;
+            color: #1e1e2e;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #74c7ec;
+        }
+        
+        .message-container {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .message-sent {
+            background-color: #89b4fa;
+            color: #1e1e2e;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-left: auto;
+            max-width: 80%;
+        }
+        
+        .message-received {
+            background-color: #45475a;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-right: auto;
+            max-width: 80%;
+        }
+        
+        .message-time {
+            font-size: 0.8em;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+        
+        .message-input-container {
+            display: flex;
+            margin-top: 10px;
+        }
+        
+        .message-input {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        
+        #chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .status-indicator {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            background-color: #a6e3a1;
+            margin-right: 5px;
+            display: inline-block;
         }
     </style>
 </head>
@@ -62,7 +157,7 @@
     
     <!-- Panel de usuario conectado -->
     <div id="user-panel" class="hidden user-info">
-        <span>Conectado como: <strong id="current-user-name"></strong> (ID: <span id="current-user-id"></span>)</span>
+        <span><span class="status-indicator"></span> Conectado como: <strong id="current-user-name"></strong> (ID: <span id="current-user-id"></span>)</span>
         <button class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
     
@@ -78,24 +173,28 @@
     
     <!-- Panel de chat (visible solo cuando está conectado) -->
     <div id="chat-panel" class="hidden">
-        <h2>Lista de Usuarios</h2>
-        <button onclick="cargarUsuarios()">Actualizar Lista de Usuarios</button>
-        <div id="user-list" class="user-list">
-            <!-- Aquí se mostrarán los usuarios -->
+        <div class="chat-container">
+            <div class="left-panel" style="width: 30%; float: left; margin-right: 2%;">
+                <h2>Usuarios</h2>
+                <div id="user-list" class="user-list">
+                    <!-- Aquí se mostrarán los usuarios -->
+                </div>
+            </div>
+            
+            <div class="right-panel" style="width: 68%; float: left;">
+                <div id="chat-header">
+                    <h2>Mensajes con: <span id="chat-with">Nadie seleccionado</span></h2>
+                </div>
+                
+                <div id="lista" class="message-box"></div>
+                
+                <div class="message-input-container">
+                    <input type="text" id="texto" class="message-input" placeholder="Escribe tu mensaje" disabled>
+                    <button id="send-button" onclick="enviarMensaje()" disabled>Enviar</button>
+                </div>
+            </div>
+            <div style="clear: both;"></div>
         </div>
-        
-        <h2>Enviar mensaje</h2>
-        <div>
-            <select id="destinatario-select">
-                <option value="">Selecciona un destinatario</option>
-            </select>
-            <input type="text" id="texto" placeholder="Escribe tu mensaje">
-            <button onclick="enviarMensaje()">Enviar</button>
-        </div>
-        
-        <h2>Mensajes</h2>
-        <button onclick="listarMensajes()">Actualizar Mensajes</button>
-        <div id="lista" class="message-box"></div>
     </div>
     
     <!-- Primero carga la librería de Supabase -->
@@ -110,12 +209,22 @@
         
         // Variables para el usuario actual
         let currentUser = null;
+        let selectedUser = null;
+        let messageCheckInterval = null;
+        let lastMessageTime = new Date().toISOString();
         
         // Cargar sesión al iniciar la página
         window.onload = async function() {
             await cargarSesion();
             await cargarUsuarios();
-            await listarMensajes();
+            
+            // Prevenir envío de formulario al presionar Enter en el campo de texto
+            document.getElementById('texto').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    enviarMensaje();
+                }
+            });
         };
         
         // Función para cargar la sesión del usuario desde localStorage
@@ -135,6 +244,9 @@
                     // Establecer sesión
                     currentUser = data;
                     mostrarPanelUsuario();
+                    
+                    // Iniciar verificación automática de mensajes nuevos
+                    iniciarActualizacionAutomatica();
                 } else {
                     // Si el usuario no existe, limpiar localStorage
                     localStorage.removeItem('userId');
@@ -143,6 +255,55 @@
                 }
             } else {
                 ocultarPanelUsuario();
+            }
+        }
+        
+        // Iniciar actualización automática de mensajes
+        function iniciarActualizacionAutomatica() {
+            // Detener cualquier intervalo existente
+            if (messageCheckInterval) {
+                clearInterval(messageCheckInterval);
+            }
+            
+            // Comprobar mensajes nuevos cada 5 segundos
+            messageCheckInterval = setInterval(function() {
+                verificarMensajesNuevos();
+            }, 5000);
+        }
+        
+        // Verificar mensajes nuevos
+        async function verificarMensajesNuevos() {
+            if (!currentUser) return;
+            
+            // Buscar mensajes más recientes que el último verificado
+            const { data, error } = await supabaseClient
+                .from('mensajes')
+                .select('*')
+                .eq('destinatario_id', currentUser.id)
+                .gt('enviado_en', lastMessageTime)
+                .order('enviado_en', { ascending: false });
+            
+            if (error) {
+                console.error('Error verificando mensajes nuevos:', error);
+                return;
+            }
+            
+            // Si hay mensajes nuevos, actualizar la vista
+            if (data && data.length > 0) {
+                // Actualizar el tiempo del último mensaje
+                lastMessageTime = new Date().toISOString();
+                
+                // Reproducir sonido o mostrar notificación aquí si lo deseas
+                
+                // Actualizar mensajes si hay un usuario seleccionado
+                if (selectedUser) {
+                    listarMensajesConUsuario(selectedUser.id);
+                } else {
+                    listarMensajes();
+                }
+                
+                // También actualizar la lista de usuarios para reflejar cambios
+                cargarUsuarios();
             }
         }
         
@@ -162,6 +323,12 @@
             document.getElementById('chat-panel').classList.add('hidden');
             document.getElementById('auth-panel').classList.remove('hidden');
             currentUser = null;
+            
+            // Detener la actualización automática
+            if (messageCheckInterval) {
+                clearInterval(messageCheckInterval);
+                messageCheckInterval = null;
+            }
         }
         
         // Cerrar sesión
@@ -205,6 +372,9 @@
             mostrarPanelUsuario();
             cargarUsuarios();
             listarMensajes();
+            
+            // Iniciar verificación automática de mensajes
+            iniciarActualizacionAutomatica();
         }
         
         // Registrar nuevo usuario
@@ -248,6 +418,9 @@
                 alert('¡Usuario registrado con éxito!');
                 mostrarPanelUsuario();
                 cargarUsuarios();
+                
+                // Iniciar verificación automática de mensajes
+                iniciarActualizacionAutomatica();
             }
         }
         
@@ -264,11 +437,9 @@
             }
             
             const userListDiv = document.getElementById('user-list');
-            const destinatarioSelect = document.getElementById('destinatario-select');
             
-            // Limpiar listas
+            // Limpiar lista
             userListDiv.innerHTML = '';
-            destinatarioSelect.innerHTML = '<option value="">Selecciona un destinatario</option>';
             
             if (data.length === 0) {
                 userListDiv.innerHTML = '<p>No hay usuarios registrados</p>';
@@ -282,17 +453,38 @@
                 // Añadir a la lista visual
                 const userDiv = document.createElement('div');
                 userDiv.className = 'user-item';
-                userDiv.textContent = `${user.alias} (ID: ${user.id})`;
-                userDiv.onclick = function() {
-                    destinatarioSelect.value = user.id;
-                };
-                userListDiv.appendChild(userDiv);
+                userDiv.textContent = user.alias;
+                userDiv.dataset.userId = user.id;
+                userDiv.dataset.userAlias = user.alias;
                 
-                // Añadir al selector de destinatario
-                const option = document.createElement('option');
-                option.value = user.id;
-                option.textContent = user.alias;
-                destinatarioSelect.appendChild(option);
+                // Añadir evento de clic para seleccionar usuario
+                userDiv.onclick = function() {
+                    // Eliminar selección anterior
+                    document.querySelectorAll('.user-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    // Añadir selección a este usuario
+                    userDiv.classList.add('active');
+                    
+                    // Establecer usuario seleccionado
+                    selectedUser = {
+                        id: user.id,
+                        alias: user.alias
+                    };
+                    
+                    // Actualizar encabezado del chat
+                    document.getElementById('chat-with').textContent = user.alias;
+                    
+                    // Habilitar entrada de texto y botón de enviar
+                    document.getElementById('texto').disabled = false;
+                    document.getElementById('send-button').disabled = false;
+                    
+                    // Cargar mensajes con este usuario
+                    listarMensajesConUsuario(user.id);
+                };
+                
+                userListDiv.appendChild(userDiv);
             });
         }
         
@@ -303,16 +495,20 @@
                 return;
             }
             
-            const destinatario = document.getElementById('destinatario-select').value;
+            if (!selectedUser) {
+                alert('Por favor selecciona un usuario para enviar un mensaje');
+                return;
+            }
+            
             const texto = document.getElementById('texto').value;
             
-            if (!destinatario || !texto) {
-                alert('Por favor selecciona un destinatario y escribe un mensaje');
+            if (!texto) {
+                alert('Por favor escribe un mensaje');
                 return;
             }
             
             let { data, error } = await supabaseClient.from('mensajes').insert([
-                { remitente_id: currentUser.id, destinatario_id: destinatario, mensaje: texto }
+                { remitente_id: currentUser.id, destinatario_id: selectedUser.id, mensaje: texto }
             ]);
             
             if (error) {
@@ -320,11 +516,67 @@
                 console.error(error);
             } else {
                 document.getElementById('texto').value = '';
-                listarMensajes();
+                listarMensajesConUsuario(selectedUser.id);
+                
+                // Actualizar el tiempo del último mensaje
+                lastMessageTime = new Date().toISOString();
             }
         }
         
-        // Listar mensajes
+        // Listar mensajes con un usuario específico
+        async function listarMensajesConUsuario(userId) {
+            if (!currentUser) return;
+            
+            // Obtener mensajes donde el usuario actual y el usuario seleccionado son remitentes o destinatarios
+            let { data, error } = await supabaseClient
+                .from('mensajes')
+                .select('*, remitente:remitente_id(alias), destinatario:destinatario_id(alias)')
+                .or(`and(remitente_id.eq.${currentUser.id},destinatario_id.eq.${userId}),and(remitente_id.eq.${userId},destinatario_id.eq.${currentUser.id})`)
+                .order('enviado_en', { ascending: true });
+                
+            const lista = document.getElementById('lista');
+            lista.innerHTML = '';
+            
+            if (error) {
+                console.error('Error cargando mensajes:', error);
+                return;
+            }
+            
+            if (data.length === 0) {
+                lista.innerHTML = '<p>No hay mensajes con este usuario</p>';
+                return;
+            }
+            
+            data.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message-container';
+                
+                const fechaFormateada = new Date(msg.enviado_en).toLocaleString();
+                
+                // Usar los alias en lugar de solo los IDs
+                const remitenteAlias = msg.remitente ? msg.remitente.alias : 'Usuario ' + msg.remitente_id;
+                
+                // Crear el elemento del mensaje
+                const messageContent = document.createElement('div');
+                
+                // Destacar mensajes propios
+                if (msg.remitente_id === currentUser.id) {
+                    messageContent.className = 'message-sent';
+                    messageContent.innerHTML = `${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
+                } else {
+                    messageContent.className = 'message-received';
+                    messageContent.innerHTML = `${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
+                }
+                
+                messageDiv.appendChild(messageContent);
+                lista.appendChild(messageDiv);
+            });
+            
+            // Desplazar al final para ver los mensajes más recientes
+            lista.scrollTop = lista.scrollHeight;
+        }
+        
+        // Listar todos los mensajes (para la vista inicial)
         async function listarMensajes() {
             if (!currentUser) return;
             
@@ -333,7 +585,8 @@
                 .from('mensajes')
                 .select('*, remitente:remitente_id(alias), destinatario:destinatario_id(alias)')
                 .or(`remitente_id.eq.${currentUser.id},destinatario_id.eq.${currentUser.id}`)
-                .order('enviado_en', { ascending: false });
+                .order('enviado_en', { ascending: false })
+                .limit(20);
                 
             const lista = document.getElementById('lista');
             lista.innerHTML = '';
@@ -349,30 +602,29 @@
             }
             
             data.forEach(msg => {
-                const li = document.createElement('div');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message-container';
+                
                 const fechaFormateada = new Date(msg.enviado_en).toLocaleString();
                 
                 // Usar los alias en lugar de solo los IDs
                 const remitenteAlias = msg.remitente ? msg.remitente.alias : 'Usuario ' + msg.remitente_id;
                 const destinatarioAlias = msg.destinatario ? msg.destinatario.alias : 'Usuario ' + msg.destinatario_id;
                 
+                // Crear el elemento del mensaje
+                const messageContent = document.createElement('div');
+                
                 // Destacar mensajes propios
                 if (msg.remitente_id === currentUser.id) {
-                    li.style.textAlign = 'right';
-                    li.style.backgroundColor = '#dcf8c6';
-                    li.style.padding = '5px';
-                    li.style.margin = '5px 0';
-                    li.style.borderRadius = '5px';
-                    li.innerHTML = `<strong>Tú → ${destinatarioAlias}</strong>: ${msg.mensaje}<br><small>${fechaFormateada}</small>`;
+                    messageContent.className = 'message-sent';
+                    messageContent.innerHTML = `<strong>Tú → ${destinatarioAlias}</strong>: ${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
                 } else {
-                    li.style.backgroundColor = '#f0f0f0';
-                    li.style.padding = '5px';
-                    li.style.margin = '5px 0';
-                    li.style.borderRadius = '5px';
-                    li.innerHTML = `<strong>${remitenteAlias} → Tú</strong>: ${msg.mensaje}<br><small>${fechaFormateada}</small>`;
+                    messageContent.className = 'message-received';
+                    messageContent.innerHTML = `<strong>${remitenteAlias} → Tú</strong>: ${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
                 }
                 
-                lista.appendChild(li);
+                messageDiv.appendChild(messageContent);
+                lista.appendChild(messageDiv);
             });
         }
     </script>
