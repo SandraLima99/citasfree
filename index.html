@@ -9,19 +9,19 @@
             max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #1e1e2e;
-            color: #cdd6f4;
+            background-color: #0a1929; /* Azul oscuro más atractivo */
+            color: #e3f2fd;
         }
         
         h1, h2 {
-            color: #89b4fa;
+            color: #29b6f6; /* Azul brillante */
         }
         
         .user-list {
             margin-top: 20px;
-            border: 1px solid #45475a;
+            border: 1px solid #1e3a5f;
             padding: 10px;
-            background-color: #313244;
+            background-color: #0d2137;
             border-radius: 5px;
         }
         
@@ -29,18 +29,51 @@
             cursor: pointer;
             padding: 8px;
             margin: 4px 0;
-            background-color: #45475a;
+            background-color: #1e3a5f;
             border-radius: 4px;
             transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
         }
         
         .user-item:hover {
-            background-color: #585b70;
+            background-color: #2a4d70;
         }
         
         .user-item.active {
-            background-color: #89b4fa;
-            color: #1e1e2e;
+            background-color: #0288d1;
+            color: #ffffff;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+            background-color: #0288d1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .user-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-status {
+            font-size: 0.8em;
+            margin-top: 3px;
         }
         
         .hidden {
@@ -48,28 +81,51 @@
         }
         
         .message-box {
-            border: 1px solid #45475a;
+            border: 1px solid #1e3a5f;
             padding: 10px;
             margin-top: 10px;
             max-height: 400px;
             overflow-y: auto;
-            background-color: #313244;
+            background-color: #0d2137;
             border-radius: 5px;
         }
         
         .user-info {
-            background-color: #313244;
+            background-color: #0d2137;
             padding: 10px;
             margin-bottom: 20px;
             border-radius: 5px;
-            border: 1px solid #45475a;
+            border: 1px solid #1e3a5f;
+            display: flex;
+            align-items: center;
+        }
+        
+        .current-user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+            object-fit: cover;
+            background-color: #0288d1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .current-user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
         }
         
         .logout-btn {
-            margin-left: 10px;
+            margin-left: auto;
             cursor: pointer;
-            background-color: #f38ba8;
-            color: #1e1e2e;
+            background-color: #f44336; /* Rojo */
+            color: white;
             border: none;
             padding: 8px 15px;
             border-radius: 4px;
@@ -79,22 +135,23 @@
         input, button, select {
             padding: 8px;
             margin: 5px 0;
-            background-color: #45475a;
-            color: #cdd6f4;
-            border: 1px solid #585b70;
+            background-color: #1e3a5f;
+            color: #e3f2fd;
+            border: 1px solid #2a4d70;
             border-radius: 4px;
         }
         
         button {
-            background-color: #89b4fa;
-            color: #1e1e2e;
+            background-color: #0288d1; /* Azul */
+            color: white;
             border: none;
             cursor: pointer;
             font-weight: bold;
+            transition: background-color 0.2s;
         }
         
         button:hover {
-            background-color: #74c7ec;
+            background-color: #039be5;
         }
         
         .message-container {
@@ -103,8 +160,8 @@
         }
         
         .message-sent {
-            background-color: #89b4fa;
-            color: #1e1e2e;
+            background-color: #0288d1;
+            color: white;
             padding: 8px 12px;
             border-radius: 8px;
             margin-left: auto;
@@ -112,7 +169,7 @@
         }
         
         .message-received {
-            background-color: #45475a;
+            background-color: #1e3a5f;
             padding: 8px 12px;
             border-radius: 8px;
             margin-right: auto;
@@ -146,9 +203,61 @@
             height: 10px;
             width: 10px;
             border-radius: 50%;
-            background-color: #a6e3a1;
             margin-right: 5px;
             display: inline-block;
+        }
+        
+        .status-online {
+            background-color: #4caf50; /* Verde */
+        }
+        
+        .status-offline {
+            background-color: #9e9e9e; /* Gris */
+        }
+        
+        .avatar-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 15px 0;
+        }
+        
+        #avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #1e3a5f;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            overflow: hidden;
+        }
+        
+        #avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .ad-container {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #0d2137;
+            border: 1px solid #1e3a5f;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .notification-badge {
+            background-color: #f44336;
+            color: white;
+            font-size: 0.8em;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
         }
     </style>
 </head>
@@ -157,7 +266,11 @@
     
     <!-- Panel de usuario conectado -->
     <div id="user-panel" class="hidden user-info">
-        <span><span class="status-indicator"></span> Conectado como: <strong id="current-user-name"></strong> (ID: <span id="current-user-id"></span>)</span>
+        <div class="current-user-avatar" id="current-user-avatar"></div>
+        <div>
+            <span><span class="status-indicator status-online"></span> Conectado como: <strong id="current-user-name"></strong></span>
+            <div>ID: <span id="current-user-id"></span></div>
+        </div>
         <button class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
     
@@ -167,15 +280,41 @@
         <div>
             <input type="text" id="login-alias" placeholder="Ingresa tu alias">
             <button onclick="iniciarSesion()">Iniciar Sesión</button>
-            <button onclick="registrarUsuario()">Registrarse</button>
+            <button onclick="mostrarRegistro()">Registrarse</button>
+        </div>
+        
+        <!-- Panel de registro (inicialmente oculto) -->
+        <div id="register-panel" class="hidden">
+            <div class="avatar-upload">
+                <div id="avatar-preview"></div>
+                <input type="file" id="avatar-input" accept="image/*">
+                <button onclick="registrarUsuario()">Completar Registro</button>
+            </div>
         </div>
     </div>
     
     <!-- Panel de chat (visible solo cuando está conectado) -->
     <div id="chat-panel" class="hidden">
+        <!-- Contenedor de anuncios superior -->
+        <div class="ad-container">
+            <div id="ad-top">
+                <!-- Script para anuncio superior -->
+                <script type="text/javascript">
+                    atOptions = {
+                        'key' : '8f88d057e1fda5f2cb45b6efe1cb51c4',
+                        'format' : 'iframe',
+                        'height' : 90,
+                        'width' : 728,
+                        'params' : {}
+                    };
+                    document.write('<script type="text/javascript" src="//www.highperformanceformat.com/8f88d057e1fda5f2cb45b6efe1cb51c4/invoke.js"><\/script>');
+                </script>
+            </div>
+        </div>
+        
         <div class="chat-container">
             <div class="left-panel" style="width: 30%; float: left; margin-right: 2%;">
-                <h2>Usuarios</h2>
+                <h2>Usuarios Online</h2>
                 <div id="user-list" class="user-list">
                     <!-- Aquí se mostrarán los usuarios -->
                 </div>
@@ -184,6 +323,10 @@
             <div class="right-panel" style="width: 68%; float: left;">
                 <div id="chat-header">
                     <h2>Mensajes con: <span id="chat-with">Nadie seleccionado</span></h2>
+                    <div>
+                        <span class="status-indicator" id="selected-user-status"></span>
+                        <span id="selected-user-status-text"></span>
+                    </div>
                 </div>
                 
                 <div id="lista" class="message-box"></div>
@@ -194,6 +337,15 @@
                 </div>
             </div>
             <div style="clear: both;"></div>
+        </div>
+        
+        <!-- Contenedor de anuncios inferior -->
+        <div class="ad-container">
+            <div id="ad-bottom">
+                <!-- Script para anuncio inferior -->
+                <script async="async" data-cfasync="false" src="//pl26408509.profitableratecpm.com/83f6589a1f5518ac29be91871ea63adf/invoke.js"></script>
+                <div id="container-83f6589a1f5518ac29be91871ea63adf"></div>
+            </div>
         </div>
     </div>
     
@@ -211,12 +363,13 @@
         let currentUser = null;
         let selectedUser = null;
         let messageCheckInterval = null;
+        let statusCheckInterval = null;
         let lastMessageTime = new Date().toISOString();
+        let avatarBase64 = null;
         
         // Cargar sesión al iniciar la página
         window.onload = async function() {
             await cargarSesion();
-            await cargarUsuarios();
             
             // Prevenir envío de formulario al presionar Enter en el campo de texto
             document.getElementById('texto').addEventListener('keypress', function(e) {
@@ -225,12 +378,43 @@
                     enviarMensaje();
                 }
             });
+            
+            // Evento para vista previa de avatar
+            document.getElementById('avatar-input').addEventListener('change', handleAvatarUpload);
+            
+            // Inicializar el avatar placeholder
+            document.getElementById('avatar-preview').innerHTML = '<div style="font-size: 36px;">?</div>';
         };
+        
+        // Función para manejar la carga de avatar
+        function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                avatarBase64 = e.target.result;
+                document.getElementById('avatar-preview').innerHTML = `<img src="${avatarBase64}" alt="Avatar">`;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Mostrar panel de registro
+        function mostrarRegistro() {
+            const alias = document.getElementById('login-alias').value;
+            if (!alias) {
+                alert('Por favor ingresa un alias');
+                return;
+            }
+            
+            document.getElementById('register-panel').classList.remove('hidden');
+        }
         
         // Función para cargar la sesión del usuario desde localStorage
         async function cargarSesion() {
             const userId = localStorage.getItem('userId');
             const userAlias = localStorage.getItem('userAlias');
+            const userAvatar = localStorage.getItem('userAvatar');
             
             if (userId && userAlias) {
                 // Verificar que el usuario sigue existiendo en la base de datos
@@ -245,12 +429,20 @@
                     currentUser = data;
                     mostrarPanelUsuario();
                     
-                    // Iniciar verificación automática de mensajes nuevos
+                    // Actualizar estado a "online"
+                    await actualizarEstadoUsuario(userId, true);
+                    
+                    // Cargar usuarios y mensajes
+                    await cargarUsuarios();
+                    listarMensajes();
+                    
+                    // Iniciar verificación automática de mensajes nuevos y estados
                     iniciarActualizacionAutomatica();
                 } else {
                     // Si el usuario no existe, limpiar localStorage
                     localStorage.removeItem('userId');
                     localStorage.removeItem('userAlias');
+                    localStorage.removeItem('userAvatar');
                     ocultarPanelUsuario();
                 }
             } else {
@@ -258,17 +450,40 @@
             }
         }
         
-        // Iniciar actualización automática de mensajes
+        // Función para actualizar el estado del usuario (online/offline)
+        async function actualizarEstadoUsuario(userId, online) {
+            const { error } = await supabaseClient
+                .from('usuarios')
+                .update({ 
+                    online: online,
+                    ultima_actividad: new Date().toISOString()
+                })
+                .eq('id', userId);
+                
+            if (error) {
+                console.error('Error actualizando estado:', error);
+            }
+        }
+        
+        // Iniciar actualización automática de mensajes y estados
         function iniciarActualizacionAutomatica() {
             // Detener cualquier intervalo existente
-            if (messageCheckInterval) {
-                clearInterval(messageCheckInterval);
-            }
+            if (messageCheckInterval) clearInterval(messageCheckInterval);
+            if (statusCheckInterval) clearInterval(statusCheckInterval);
             
             // Comprobar mensajes nuevos cada 5 segundos
             messageCheckInterval = setInterval(function() {
                 verificarMensajesNuevos();
             }, 5000);
+            
+            // Comprobar estados de usuarios cada 30 segundos
+            statusCheckInterval = setInterval(function() {
+                cargarUsuarios();
+                // Actualizar timestamp de actividad del usuario actual
+                if (currentUser) {
+                    actualizarEstadoUsuario(currentUser.id, true);
+                }
+            }, 30000);
         }
         
         // Verificar mensajes nuevos
@@ -293,7 +508,9 @@
                 // Actualizar el tiempo del último mensaje
                 lastMessageTime = new Date().toISOString();
                 
-                // Reproducir sonido o mostrar notificación aquí si lo deseas
+                // Reproducir sonido de notificación
+                const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-951.mp3');
+                audio.play();
                 
                 // Actualizar mensajes si hay un usuario seleccionado
                 if (selectedUser) {
@@ -315,6 +532,15 @@
             
             document.getElementById('current-user-name').textContent = currentUser.alias;
             document.getElementById('current-user-id').textContent = currentUser.id;
+            
+            // Actualizar avatar del usuario
+            const avatarContainer = document.getElementById('current-user-avatar');
+            if (currentUser.avatar) {
+                avatarContainer.innerHTML = `<img src="${currentUser.avatar}" alt="Avatar">`;
+            } else {
+                // Si no hay avatar, mostrar la primera letra del alias
+                avatarContainer.innerHTML = currentUser.alias.charAt(0).toUpperCase();
+            }
         }
         
         // Ocultar panel de usuario y mostrar panel de autenticación
@@ -322,6 +548,13 @@
             document.getElementById('user-panel').classList.add('hidden');
             document.getElementById('chat-panel').classList.add('hidden');
             document.getElementById('auth-panel').classList.remove('hidden');
+            document.getElementById('register-panel').classList.add('hidden');
+            
+            if (currentUser) {
+                // Actualizar estado a "offline" si había un usuario
+                actualizarEstadoUsuario(currentUser.id, false);
+            }
+            
             currentUser = null;
             
             // Detener la actualización automática
@@ -329,12 +562,23 @@
                 clearInterval(messageCheckInterval);
                 messageCheckInterval = null;
             }
+            
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+                statusCheckInterval = null;
+            }
         }
         
         // Cerrar sesión
-        function cerrarSesion() {
+        async function cerrarSesion() {
+            if (currentUser) {
+                // Marcar como offline antes de cerrar sesión
+                await actualizarEstadoUsuario(currentUser.id, false);
+            }
+            
             localStorage.removeItem('userId');
             localStorage.removeItem('userAlias');
+            localStorage.removeItem('userAvatar');
             ocultarPanelUsuario();
         }
         
@@ -359,21 +603,31 @@
             }
             
             if (!data) {
-                alert('Usuario no encontrado. ¿Quieres registrarte?');
+                alert('Usuario no encontrado. Por favor regístrate primero.');
+                return;
+            }
+            
+            // Verificar si tiene avatar
+            if (!data.avatar) {
+                alert('Necesitas actualizar tu perfil con una foto antes de iniciar sesión.');
                 return;
             }
             
             // Guardar sesión
             localStorage.setItem('userId', data.id);
             localStorage.setItem('userAlias', data.alias);
+            localStorage.setItem('userAvatar', data.avatar);
             currentUser = data;
+            
+            // Actualizar estado a online
+            await actualizarEstadoUsuario(data.id, true);
             
             alert('¡Sesión iniciada correctamente!');
             mostrarPanelUsuario();
-            cargarUsuarios();
+            await cargarUsuarios();
             listarMensajes();
             
-            // Iniciar verificación automática de mensajes
+            // Iniciar verificación automática de mensajes y estados
             iniciarActualizacionAutomatica();
         }
         
@@ -382,6 +636,12 @@
             const alias = document.getElementById('login-alias').value;
             if (!alias) {
                 alert('Por favor ingresa un alias');
+                return;
+            }
+            
+            // Verificar si se subió un avatar
+            if (!avatarBase64) {
+                alert('Por favor sube una foto de perfil');
                 return;
             }
             
@@ -397,10 +657,15 @@
                 return;
             }
             
-            // Registrar nuevo usuario
+            // Registrar nuevo usuario con avatar
             const { data, error } = await supabaseClient
                 .from('usuarios')
-                .insert([{ alias: alias }])
+                .insert([{ 
+                    alias: alias,
+                    avatar: avatarBase64,
+                    online: true,
+                    ultima_actividad: new Date().toISOString()
+                }])
                 .select();
             
             if (error) {
@@ -413,15 +678,27 @@
                 // Guardar sesión
                 localStorage.setItem('userId', data[0].id);
                 localStorage.setItem('userAlias', data[0].alias);
+                localStorage.setItem('userAvatar', data[0].avatar);
                 currentUser = data[0];
                 
                 alert('¡Usuario registrado con éxito!');
                 mostrarPanelUsuario();
-                cargarUsuarios();
+                await cargarUsuarios();
                 
-                // Iniciar verificación automática de mensajes
+                // Iniciar verificación automática de mensajes y estados
                 iniciarActualizacionAutomatica();
             }
+        }
+        
+        // Función para verificar si un usuario está activo (menos de 5 minutos de inactividad)
+        function isUserActive(lastActivity) {
+            if (!lastActivity) return false;
+            
+            const now = new Date();
+            const lastActiveTime = new Date(lastActivity);
+            const diffMinutes = (now - lastActiveTime) / (1000 * 60);
+            
+            return diffMinutes < 5; // Menos de 5 minutos de inactividad
         }
         
         // Cargar lista de usuarios
@@ -429,7 +706,8 @@
             const { data, error } = await supabaseClient
                 .from('usuarios')
                 .select('*')
-                .order('alias');
+                .order('online', { ascending: false })
+                .order('ultima_actividad', { ascending: false });
                 
             if (error) {
                 console.error('Error cargando usuarios:', error);
@@ -446,16 +724,73 @@
                 return;
             }
             
+            // Verificar notificaciones no leídas para cada usuario
+            const mensajesNoLeidos = {};
+            if (currentUser) {
+                const { data: unreadData, error: unreadError } = await supabaseClient
+                    .from('mensajes')
+                    .select('remitente_id, count')
+                    .eq('destinatario_id', currentUser.id)
+                    .eq('leido', false)
+                    .group('remitente_id');
+                
+                if (!unreadError && unreadData) {
+                    unreadData.forEach(item => {
+                        mensajesNoLeidos[item.remitente_id] = item.count;
+                    });
+                }
+            }
+            
             data.forEach(user => {
                 // No mostrar al usuario actual en la lista
                 if (currentUser && user.id === currentUser.id) return;
                 
+                // Verificar si el usuario está activo
+                const isActive = user.online && isUserActive(user.ultima_actividad);
+                
                 // Añadir a la lista visual
                 const userDiv = document.createElement('div');
                 userDiv.className = 'user-item';
-                userDiv.textContent = user.alias;
                 userDiv.dataset.userId = user.id;
                 userDiv.dataset.userAlias = user.alias;
+                
+                // Avatar del usuario
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = 'user-avatar';
+                
+                if (user.avatar) {
+                    avatarDiv.innerHTML = `<img src="${user.avatar}" alt="${user.alias}">`;
+                } else {
+                    avatarDiv.textContent = user.alias.charAt(0).toUpperCase();
+                }
+                
+                // Información del usuario
+                const userInfoDiv = document.createElement('div');
+                userInfoDiv.className = 'user-info-item';
+                
+                const userName = document.createElement('span');
+                userName.textContent = user.alias;
+                
+                // Estado del usuario
+                const userStatus = document.createElement('span');
+                userStatus.className = 'user-status';
+                userStatus.innerHTML = isActive ? 
+                    '<span class="status-indicator status-online"></span> En línea' : 
+                    '<span class="status-indicator status-offline"></span> Desconectado';
+                
+                userInfoDiv.appendChild(userName);
+                userInfoDiv.appendChild(userStatus);
+                
+                userDiv.appendChild(avatarDiv);
+                userDiv.appendChild(userInfoDiv);
+                
+                // Añadir badge de notificación si hay mensajes no leídos
+                if (mensajesNoLeidos[user.id]) {
+                    const badge = document.createElement('span');
+                    badge.className = 'notification-badge';
+                    badge.textContent = mensajesNoLeidos[user.id];
+                    userDiv.appendChild(badge);
+                }
                 
                 // Añadir evento de clic para seleccionar usuario
                 userDiv.onclick = function() {
@@ -470,11 +805,24 @@
                     // Establecer usuario seleccionado
                     selectedUser = {
                         id: user.id,
-                        alias: user.alias
+                        alias: user.alias,
+                        online: isActive
                     };
                     
                     // Actualizar encabezado del chat
                     document.getElementById('chat-with').textContent = user.alias;
+                    
+                    // Actualizar indicador de estado
+                    const statusIndicator = document.getElementById('selected-user-status');
+                    const statusText = document.getElementById('selected-user-status-text');
+                    
+                    if (isActive) {
+                        statusIndicator.className = 'status-indicator status-online';
+                        statusText.textContent = 'En línea';
+                    } else {
+                        statusIndicator.className = 'status-indicator status-offline';
+                        statusText.textContent = 'Desconectado';
+                    }
                     
                     // Habilitar entrada de texto y botón de enviar
                     document.getElementById('texto').disabled = false;
@@ -482,151 +830,150 @@
                     
                     // Cargar mensajes con este usuario
                     listarMensajesConUsuario(user.id);
+                    
+                    // Marcar mensajes como leídos
+                    if (mensajesNoLeidos[user.id]) {
+                        marcarMensajesComoLeidos(user.id);
+                    }
                 };
                 
                 userListDiv.appendChild(userDiv);
             });
         }
         
-        // Enviar mensaje
-        async function enviarMensaje() {
-            if (!currentUser) {
-                alert('Debes iniciar sesión para enviar mensajes');
-                return;
-            }
+        // Marcar mensajes como leídos
+        async function marcarMensajesComoLeidos(remitenteId) {
+            if (!currentUser) return;
             
-            if (!selectedUser) {
-                alert('Por favor selecciona un usuario para enviar un mensaje');
-                return;
-            }
-            
-            const texto = document.getElementById('texto').value;
-            
-            if (!texto) {
-                alert('Por favor escribe un mensaje');
-                return;
-            }
-            
-            let { data, error } = await supabaseClient.from('mensajes').insert([
-                { remitente_id: currentUser.id, destinatario_id: selectedUser.id, mensaje: texto }
-            ]);
-            
-            if (error) {
-                alert('Error: ' + error.message);
-                console.error(error);
-            } else {
-                document.getElementById('texto').value = '';
-                listarMensajesConUsuario(selectedUser.id);
+            const { error } = await supabaseClient
+                .from('mensajes')
+                .update({ leido: true })
+                .eq('destinatario_id', currentUser.id)
+                .eq('remitente_id', remitenteId);
                 
-                // Actualizar el tiempo del último mensaje
-                lastMessageTime = new Date().toISOString();
+            if (error) {
+                console.error('Error marcando mensajes como leídos:', error);
             }
         }
         
-        // Listar mensajes con un usuario específico
-        async function listarMensajesConUsuario(userId) {
-            if (!currentUser) return;
-            
-            // Obtener mensajes donde el usuario actual y el usuario seleccionado son remitentes o destinatarios
-            let { data, error } = await supabaseClient
-                .from('mensajes')
-                .select('*, remitente:remitente_id(alias), destinatario:destinatario_id(alias)')
-                .or(`and(remitente_id.eq.${currentUser.id},destinatario_id.eq.${userId}),and(remitente_id.eq.${userId},destinatario_id.eq.${currentUser.id})`)
-                .order('enviado_en', { ascending: true });
-                
-            const lista = document.getElementById('lista');
-            lista.innerHTML = '';
-            
-            if (error) {
-                console.error('Error cargando mensajes:', error);
-                return;
-            }
-            
-            if (data.length === 0) {
-                lista.innerHTML = '<p>No hay mensajes con este usuario</p>';
-                return;
-            }
-            
-            data.forEach(msg => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message-container';
-                
-                const fechaFormateada = new Date(msg.enviado_en).toLocaleString();
-                
-                // Usar los alias en lugar de solo los IDs
-                const remitenteAlias = msg.remitente ? msg.remitente.alias : 'Usuario ' + msg.remitente_id;
-                
-                // Crear el elemento del mensaje
-                const messageContent = document.createElement('div');
-                
-                // Destacar mensajes propios
-                if (msg.remitente_id === currentUser.id) {
-                    messageContent.className = 'message-sent';
-                    messageContent.innerHTML = `${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
-                } else {
-                    messageContent.className = 'message-received';
-                    messageContent.innerHTML = `${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
-                }
-                
-                messageDiv.appendChild(messageContent);
-                lista.appendChild(messageDiv);
-            });
-            
-            // Desplazar al final para ver los mensajes más recientes
-            lista.scrollTop = lista.scrollHeight;
-        }
+       // Enviar mensaje
+async function enviarMensaje() {
+    if (!currentUser) {
+        alert('Debes iniciar sesión para enviar mensajes');
+        return;
+    }
+    
+    if (!selectedUser) {
+        alert('Selecciona un usuario para enviar un mensaje');
+        return;
+    }
+    
+    const texto = document.getElementById('texto').value.trim();
+    if (!texto) {
+        alert('Escribe un mensaje');
+        return;
+    }
+    
+    // Enviar mensaje a la base de datos
+    const { error } = await supabaseClient
+        .from('mensajes')
+        .insert([{
+            remitente_id: currentUser.id,
+            destinatario_id: selectedUser.id,
+            contenido: texto,
+            enviado_en: new Date().toISOString(),
+            leido: false
+        }]);
         
-        // Listar todos los mensajes (para la vista inicial)
-        async function listarMensajes() {
-            if (!currentUser) return;
-            
-            // Obtener mensajes donde el usuario actual es remitente o destinatario
-            let { data, error } = await supabaseClient
-                .from('mensajes')
-                .select('*, remitente:remitente_id(alias), destinatario:destinatario_id(alias)')
-                .or(`remitente_id.eq.${currentUser.id},destinatario_id.eq.${currentUser.id}`)
-                .order('enviado_en', { ascending: false })
-                .limit(20);
-                
-            const lista = document.getElementById('lista');
-            lista.innerHTML = '';
-            
-            if (error) {
-                console.error('Error cargando mensajes:', error);
-                return;
-            }
-            
-            if (data.length === 0) {
-                lista.innerHTML = '<p>No hay mensajes</p>';
-                return;
-            }
-            
-            data.forEach(msg => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message-container';
-                
-                const fechaFormateada = new Date(msg.enviado_en).toLocaleString();
-                
-                // Usar los alias en lugar de solo los IDs
-                const remitenteAlias = msg.remitente ? msg.remitente.alias : 'Usuario ' + msg.remitente_id;
-                const destinatarioAlias = msg.destinatario ? msg.destinatario.alias : 'Usuario ' + msg.destinatario_id;
-                
-                // Crear el elemento del mensaje
-                const messageContent = document.createElement('div');
-                
-                // Destacar mensajes propios
-                if (msg.remitente_id === currentUser.id) {
-                    messageContent.className = 'message-sent';
-                    messageContent.innerHTML = `<strong>Tú → ${destinatarioAlias}</strong>: ${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
-                } else {
-                    messageContent.className = 'message-received';
-                    messageContent.innerHTML = `<strong>${remitenteAlias} → Tú</strong>: ${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
-                }
-                
-                messageDiv.appendChild(messageContent);
-                lista.appendChild(messageDiv);
-            });
-        }
+    if (error) {
+        alert('Error enviando mensaje: ' + error.message);
+        return;
+    }
+    
+    // Limpiar campo de texto
+    document.getElementById('texto').value = '';
+    
+    // Actualizar la lista de mensajes
+    listarMensajesConUsuario(selectedUser.id);
+}
+
+// Listar todos los mensajes
+async function listarMensajes() {
+    if (!currentUser) return;
+    
+    document.getElementById('lista').innerHTML = '<p>Selecciona un usuario para ver los mensajes</p>';
+}
+
+// Listar mensajes con un usuario específico
+async function listarMensajesConUsuario(userId) {
+    if (!currentUser) return;
+    
+    // Obtener mensajes enviados y recibidos con este usuario
+    const { data, error } = await supabaseClient
+        .from('mensajes')
+        .select('*')
+        .or(`remitente_id.eq.${currentUser.id},destinatario_id.eq.${currentUser.id}`)
+        .or(`remitente_id.eq.${userId},destinatario_id.eq.${userId}`)
+        .order('enviado_en', { ascending: true });
+        
+    if (error) {
+        console.error('Error listando mensajes:', error);
+        return;
+    }
+    
+    const listaDiv = document.getElementById('lista');
+    listaDiv.innerHTML = '';
+    
+    if (data.length === 0) {
+        listaDiv.innerHTML = '<p>No hay mensajes con este usuario</p>';
+        return;
+    }
+    
+    // Filtrar solo los mensajes entre estos dos usuarios
+    const mensajesRelevantes = data.filter(mensaje => 
+        (mensaje.remitente_id === currentUser.id && mensaje.destinatario_id === userId) ||
+        (mensaje.remitente_id === userId && mensaje.destinatario_id === currentUser.id)
+    );
+    
+    if (mensajesRelevantes.length === 0) {
+        listaDiv.innerHTML = '<p>No hay mensajes con este usuario</p>';
+        return;
+    }
+    
+    // Mostrar mensajes
+    mensajesRelevantes.forEach(mensaje => {
+        const esMio = mensaje.remitente_id === currentUser.id;
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message-container';
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = esMio ? 'message-sent' : 'message-received';
+        
+        // Contenido del mensaje
+        messageContent.innerHTML = mensaje.contenido;
+        
+        // Hora del mensaje
+        const messageTime = document.createElement('div');
+        messageTime.className = 'message-time';
+        const fecha = new Date(mensaje.enviado_en);
+        messageTime.textContent = fecha.toLocaleTimeString() + ' ' + fecha.toLocaleDateString();
+        messageContent.appendChild(messageTime);
+        
+        messageDiv.appendChild(messageContent);
+        listaDiv.appendChild(messageDiv);
+    });
+    
+    // Desplazar al final
+    listaDiv.scrollTop = listaDiv.scrollHeight;
+}
+
+// En caso de cierre de ventana, marcar como offline
+window.addEventListener('beforeunload', async function() {
+    if (currentUser) {
+        await actualizarEstadoUsuario(currentUser.id, false);
+    }
+});
     </script>
 </body>
 </html>
