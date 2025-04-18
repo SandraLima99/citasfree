@@ -109,11 +109,122 @@
             flex: 1;
         }
         
+        .error-message {
+            color: #f38ba8;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        
+        .required-field {
+            color: #f38ba8;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
         .ad-container {
             width: 100%;
             text-align: center;
             margin: 20px 0;
             clear: both;
+        }
+        
+        #chat-container {
+            display: none;
+            background-color: #313244;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #45475a;
+            margin-top: 20px;
+        }
+        
+        #message-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #1e1e2e;
+            border-radius: 4px;
+        }
+        
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        .my-message {
+            background-color: #89b4fa;
+            color: #1e1e2e;
+            margin-left: 20%;
+        }
+        
+        .other-message {
+            background-color: #45475a;
+            margin-right: 20%;
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .message-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 8px;
+            object-fit: cover;
+        }
+        
+        .message-alias {
+            font-weight: bold;
+        }
+        
+        .message-content {
+            word-break: break-word;
+        }
+        
+        #message-form {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #message-input {
+            flex-grow: 1;
+        }
+        
+        #send-button {
+            width: auto;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+        
+        .user-alias {
+            font-weight: bold;
+        }
+        
+        .logout-button {
+            margin-left: auto;
+            background-color: #f38ba8;
+            color: #1e1e2e;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -121,10 +232,11 @@
     <h1>Chat de Supabase</h1>
     
     <!-- Panel de autenticación -->
-    <div class="auth-container">
+    <div id="auth-section" class="auth-container">
         <div id="login-panel">
             <h2>Iniciar sesión</h2>
             <input type="text" id="login-alias" placeholder="Ingresa tu alias">
+            <div id="login-error" class="error-message"></div>
             <div class="button-group">
                 <button onclick="iniciarSesion()">Iniciar Sesión</button>
                 <button onclick="mostrarRegistro()">Registrarse</button>
@@ -141,13 +253,31 @@
                     <label for="avatar-upload" class="file-input-label">Seleccionar Foto</label>
                     <input type="file" id="avatar-upload" accept="image/*" onchange="previewImage(event)">
                 </div>
+                <div class="required-field">* La foto de perfil es obligatoria</div>
             </div>
             
             <input type="text" id="registro-alias" placeholder="Ingresa tu alias">
+            <div id="registro-error" class="error-message"></div>
             <div class="button-group">
                 <button onclick="registrarUsuario()">Crear Cuenta</button>
                 <button onclick="volverLogin()">Volver</button>
             </div>
+        </div>
+    </div>
+    
+    <!-- Chat integrado para evitar redirecciones 404 -->
+    <div id="chat-container">
+        <div class="user-info">
+            <img id="user-avatar" src="/api/placeholder/40/40" alt="Avatar" class="user-avatar">
+            <span id="user-alias" class="user-alias"></span>
+            <button class="logout-button" onclick="cerrarSesion()">Cerrar sesión</button>
+        </div>
+        
+        <div id="message-list"></div>
+        
+        <div id="message-form">
+            <input type="text" id="message-input" placeholder="Escribe tu mensaje...">
+            <button id="send-button" onclick="enviarMensaje()">Enviar</button>
         </div>
     </div>
     
@@ -186,8 +316,8 @@
                     .single();
                 
                 if (data && !error) {
-                    // Si hay sesión, redirigir al chat
-                    window.location.href = 'chat.html';
+                    // Si hay sesión activa, mostrar el chat
+                    mostrarChat();
                 }
             }
         };
@@ -197,12 +327,14 @@
             document.getElementById('login-panel').classList.add('hidden');
             document.getElementById('registro-panel').classList.remove('hidden');
             document.getElementById('registro-alias').value = document.getElementById('login-alias').value;
+            document.getElementById('registro-error').textContent = '';
         }
         
         // Volver al panel de login
         function volverLogin() {
             document.getElementById('login-panel').classList.remove('hidden');
             document.getElementById('registro-panel').classList.add('hidden');
+            document.getElementById('login-error').textContent = '';
         }
         
         // Previsualizar imagen seleccionada
@@ -220,9 +352,11 @@
         
         // Iniciar sesión con alias existente
         async function iniciarSesion() {
-            const alias = document.getElementById('login-alias').value;
+            const alias = document.getElementById('login-alias').value.trim();
+            const errorElement = document.getElementById('login-error');
+            
             if (!alias) {
-                alert('Por favor ingresa un alias');
+                errorElement.textContent = 'Por favor ingresa un alias';
                 return;
             }
             
@@ -234,12 +368,12 @@
                 .maybeSingle();
             
             if (error) {
-                alert('Error buscando usuario: ' + error.message);
+                errorElement.textContent = 'Error al buscar usuario: ' + error.message;
                 return;
             }
             
             if (!data) {
-                alert('Usuario no encontrado. ¿Quieres registrarte?');
+                errorElement.textContent = 'Usuario no encontrado. ¿Quieres registrarte?';
                 mostrarRegistro();
                 return;
             }
@@ -253,17 +387,24 @@
                 localStorage.setItem('userAvatar', data.avatar);
             }
             
-            alert('¡Sesión iniciada correctamente!');
-            
-            // Redirigir a la página de chat
-            window.location.href = 'chat.html';
+            // Mostrar el chat en vez de redirigir
+            mostrarChat();
         }
         
         // Registrar nuevo usuario
         async function registrarUsuario() {
-            const alias = document.getElementById('registro-alias').value;
+            const alias = document.getElementById('registro-alias').value.trim();
+            const errorElement = document.getElementById('registro-error');
+            
+            // Validar datos de registro
             if (!alias) {
-                alert('Por favor ingresa un alias');
+                errorElement.textContent = 'Por favor ingresa un alias';
+                return;
+            }
+            
+            // Validar que se haya subido una foto (OBLIGATORIO)
+            if (!imageBase64) {
+                errorElement.textContent = 'La foto de perfil es obligatoria';
                 return;
             }
             
@@ -275,41 +416,223 @@
                 .maybeSingle();
             
             if (existingUser) {
-                alert('Este alias ya está en uso. Por favor elige otro o inicia sesión.');
+                errorElement.textContent = 'Este alias ya está en uso. Por favor elige otro o inicia sesión.';
                 return;
             }
             
-            // Registrar nuevo usuario con avatar si se subió uno
-            const { data, error } = await supabaseClient
-                .from('usuarios')
-                .insert([{ 
-                    alias: alias,
-                    avatar: imageBase64 // Guardar la imagen en base64
-                }])
-                .select();
-            
-            if (error) {
-                alert('Error: ' + error.message);
-                console.error(error);
-                return;
-            }
-            
-            if (data && data.length > 0) {
-                // Guardar sesión
-                localStorage.setItem('userId', data[0].id);
-                localStorage.setItem('userAlias', data[0].alias);
+            try {
+                // Registrar nuevo usuario con avatar
+                const { data, error } = await supabaseClient
+                    .from('usuarios')
+                    .insert([{ 
+                        alias: alias,
+                        avatar: imageBase64 // Guardar la imagen en base64
+                    }])
+                    .select();
                 
-                // Guardar avatar si existe
-                if (imageBase64) {
-                    localStorage.setItem('userAvatar', imageBase64);
+                if (error) {
+                    errorElement.textContent = 'Error al registrar: ' + error.message;
+                    console.error(error);
+                    return;
                 }
                 
-                alert('¡Usuario registrado con éxito!');
-                
-                // Redirigir a la página de chat
-                window.location.href = 'usuarios.html';
+                if (data && data.length > 0) {
+                    // Guardar sesión
+                    localStorage.setItem('userId', data[0].id);
+                    localStorage.setItem('userAlias', data[0].alias);
+                    localStorage.setItem('userAvatar', imageBase64);
+                    
+                    // Mostrar el chat en vez de redirigir
+                    mostrarChat();
+                }
+            } catch (error) {
+                errorElement.textContent = 'Error inesperado: ' + error.message;
+                console.error(error);
             }
         }
+        
+        // Mostrar interfaz de chat después de autenticación
+        function mostrarChat() {
+            // Ocultar sección de autenticación
+            document.getElementById('auth-section').style.display = 'none';
+            
+            // Mostrar contenedor de chat
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.style.display = 'block';
+            
+            // Cargar información del usuario
+            const userAlias = localStorage.getItem('userAlias');
+            const userAvatar = localStorage.getItem('userAvatar');
+            
+            document.getElementById('user-alias').textContent = userAlias;
+            
+            if (userAvatar) {
+                document.getElementById('user-avatar').src = userAvatar;
+            }
+            
+            // Cargar mensajes anteriores
+            cargarMensajes();
+            
+            // Configurar suscripción a nuevos mensajes
+            suscribirseAMensajes();
+        }
+        
+        // Cargar mensajes anteriores
+        async function cargarMensajes() {
+            const { data, error } = await supabaseClient
+                .from('mensajes')
+                .select(`
+                    *,
+                    usuarios:usuario_id (alias, avatar)
+                `)
+                .order('created_at', { ascending: true })
+                .limit(50);
+            
+            if (error) {
+                console.error('Error al cargar mensajes:', error);
+                return;
+            }
+            
+            const messageList = document.getElementById('message-list');
+            messageList.innerHTML = '';
+            
+            if (data && data.length > 0) {
+                data.forEach(mensaje => {
+                    agregarMensajeALista(mensaje);
+                });
+                
+                // Scroll al final
+                messageList.scrollTop = messageList.scrollHeight;
+            }
+        }
+        
+        // Suscribirse a nuevos mensajes en tiempo real
+        function suscribirseAMensajes() {
+            supabaseClient
+                .channel('mensajes-publicos')
+                .on('postgres_changes', { 
+                    event: 'INSERT', 
+                    schema: 'public', 
+                    table: 'mensajes' 
+                }, payload => {
+                    // Obtener detalles del usuario que envió el mensaje
+                    obtenerDetallesUsuario(payload.new.usuario_id).then(usuario => {
+                        const mensajeCompleto = {
+                            ...payload.new,
+                            usuarios: usuario
+                        };
+                        agregarMensajeALista(mensajeCompleto);
+                        
+                        // Scroll al final
+                        const messageList = document.getElementById('message-list');
+                        messageList.scrollTop = messageList.scrollHeight;
+                    });
+                })
+                .subscribe();
+        }
+        
+        // Obtener detalles del usuario para mostrar en mensajes
+        async function obtenerDetallesUsuario(userId) {
+            const { data, error } = await supabaseClient
+                .from('usuarios')
+                .select('alias, avatar')
+                .eq('id', userId)
+                .single();
+                
+            if (error || !data) {
+                console.error('Error al obtener detalles del usuario:', error);
+                return { alias: 'Desconocido', avatar: null };
+            }
+            
+            return data;
+        }
+        
+        // Agregar mensaje a la lista de mensajes
+        function agregarMensajeALista(mensaje) {
+            const messageList = document.getElementById('message-list');
+            const userId = localStorage.getItem('userId');
+            
+            const esPropio = mensaje.usuario_id == userId;
+            
+            const mensajeElement = document.createElement('div');
+            mensajeElement.className = `message ${esPropio ? 'my-message' : 'other-message'}`;
+            
+            // Si no es un mensaje propio, mostrar avatar y alias
+            if (!esPropio) {
+                const headerElement = document.createElement('div');
+                headerElement.className = 'message-header';
+                
+                const avatarElement = document.createElement('img');
+                avatarElement.className = 'message-avatar';
+                avatarElement.src = mensaje.usuarios?.avatar || '/api/placeholder/30/30';
+                avatarElement.alt = 'Avatar';
+                
+                const aliasElement = document.createElement('div');
+                aliasElement.className = 'message-alias';
+                aliasElement.textContent = mensaje.usuarios?.alias || 'Desconocido';
+                
+                headerElement.appendChild(avatarElement);
+                headerElement.appendChild(aliasElement);
+                mensajeElement.appendChild(headerElement);
+            }
+            
+            const contentElement = document.createElement('div');
+            contentElement.className = 'message-content';
+            contentElement.textContent = mensaje.contenido;
+            
+            mensajeElement.appendChild(contentElement);
+            messageList.appendChild(mensajeElement);
+        }
+        
+        // Enviar un nuevo mensaje
+        async function enviarMensaje() {
+            const messageInput = document.getElementById('message-input');
+            const contenido = messageInput.value.trim();
+            
+            if (!contenido) return;
+            
+            const userId = localStorage.getItem('userId');
+            
+            // Insertar mensaje en la base de datos
+            const { error } = await supabaseClient
+                .from('mensajes')
+                .insert([{
+                    usuario_id: userId,
+                    contenido: contenido
+                }]);
+                
+            if (error) {
+                console.error('Error al enviar mensaje:', error);
+                return;
+            }
+            
+            // Limpiar campo de entrada
+            messageInput.value = '';
+        }
+        
+        // Cerrar sesión
+        function cerrarSesion() {
+            // Limpiar datos de sesión
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userAlias');
+            localStorage.removeItem('userAvatar');
+            
+            // Recargar la página para volver al login
+            window.location.reload();
+        }
+        
+        // Permitir enviar mensaje con Enter
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageInput = document.getElementById('message-input');
+            if (messageInput) {
+                messageInput.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        enviarMensaje();
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
