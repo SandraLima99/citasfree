@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat de Supabase</title>
     <style>
         body {
@@ -150,10 +151,56 @@
             margin-right: 5px;
             display: inline-block;
         }
+        
+        /* Estilos para anuncios */
+        .ad-container {
+            width: 100%;
+            text-align: center;
+            margin: 20px 0;
+            clear: both;
+        }
+        
+        .ad-mobile {
+            display: none;
+        }
+        
+        /* Estilos responsivos para anuncios */
+        @media (max-width: 768px) {
+            .ad-desktop {
+                display: none;
+            }
+            
+            .ad-mobile {
+                display: block;
+                width: 100%;
+                overflow: hidden;
+                margin: 15px auto;
+            }
+            
+            .chat-container .left-panel,
+            .chat-container .right-panel {
+                width: 100% !important;
+                float: none !important;
+                margin-right: 0 !important;
+            }
+        }
     </style>
 </head>
 <body>
     <h1>Chat de Supabase</h1>
+    
+    <!-- Anuncio superior para escritorio -->
+    <div class="ad-container ad-desktop">
+        <script type="text/javascript">
+            atOptions = { 'key' : '8f88d057e1fda5f2cb45b6efe1cb51c4', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
+        </script>
+        <script type="text/javascript" src="//www.highperformanceformat.com/8f88d057e1fda5f2cb45b6efe1cb51c4/invoke.js"></script>
+    </div>
+    
+    <!-- Anuncio superior para móvil -->
+    <div class="ad-container ad-mobile">
+        <script type='text/javascript' src='//pl26408505.profitableratecpm.com/54/d4/33/54d43392e0a2c7ce4f5d866d24c24463.js'></script>
+    </div>
     
     <!-- Panel de usuario conectado -->
     <div id="user-panel" class="hidden user-info">
@@ -195,6 +242,14 @@
             </div>
             <div style="clear: both;"></div>
         </div>
+    </div>
+    
+    <!-- Anuncio central para todos los dispositivos -->
+    <div class="ad-container">
+        <script type="text/javascript">
+            atOptions = { 'key' : '8f88d057e1fda5f2cb45b6efe1cb51c4', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
+        </script>
+        <script type="text/javascript" src="//www.highperformanceformat.com/8f88d057e1fda5f2cb45b6efe1cb51c4/invoke.js"></script>
     </div>
     
     <!-- Primero carga la librería de Supabase -->
@@ -628,5 +683,13 @@
             });
         }
     </script>
+    
+    <!-- Anuncio inferior para todos los dispositivos -->
+    <div class="ad-container">
+        <script type="text/javascript">
+            atOptions = { 'key' : '8f88d057e1fda5f2cb45b6efe1cb51c4', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
+        </script>
+        <script type="text/javascript" src="//www.highperformanceformat.com/8f88d057e1fda5f2cb45b6efe1cb51c4/invoke.js"></script>
+    </div>
 </body>
 </html>
