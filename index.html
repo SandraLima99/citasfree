@@ -43,7 +43,7 @@
         const { data, error } = await supabase
             .from('usuarios')
             .select('pin')
-            .eq('usuario', usuario)
+            .eq('alias', usuario)
             .single();
 
         if (error || !data) {
