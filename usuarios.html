@@ -4,10 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CitasFree Básico</title>
+    <style>
+        /* Estilos mínimos para mejor legibilidad */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #usuarios-lista ul {
+            padding-left: 20px;
+        }
+        #usuarios-lista li {
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        #usuarios-lista li:hover {
+            text-decoration: underline;
+        }
+        #chat-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        #chat-messages {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        #message-input {
+            width: 70%;
+            padding: 5px;
+        }
+        .message-sent {
+            color: blue;
+            margin: 5px 0;
+        }
+        .message-received {
+            color: green;
+            margin: 5px 0;
+        }
+    </style>
 </head>
 <body>
     <h1>CitasFree</h1>
     <button id="logout-btn">Cerrar sesión</button>
+    
+    <div id="info-usuario"></div>
     
     <div id="usuarios-lista">
         <h2>Cargando usuarios...</h2>
@@ -18,9 +61,7 @@
             <h3 id="chat-title">Chat</h3>
             <button id="close-chat">Cerrar</button>
         </div>
-        <div id="chat-messages">
-            <!-- Los mensajes se cargarán aquí -->
-        </div>
+        <div id="chat-messages"></div>
         <div>
             <input type="text" id="message-input" placeholder="Escribe un mensaje...">
             <button id="send-message">Enviar</button>
@@ -34,7 +75,7 @@
             // Configuración de Supabase
             const supabaseUrl = 'https://aosshivxcxlypnsbvghc.supabase.co';
             const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvc3NoaXZ4Y3hseXBuc2J2Z2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzEyODEsImV4cCI6MjA2MDUwNzI4MX0.Vrs5L1Lbw7BwgagXB0Zy5SIrOFe9wBL2fKjBP6vdXtE';
-            const supabase = supabaseCreateClient(supabaseUrl, supabaseKey);
+            const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
             
             // Variables para el chat
             let currentChatUser = null;
@@ -50,17 +91,20 @@
             const usuario = JSON.parse(usuarioJSON);
             console.log('Usuario actual:', usuario);
             
+            // Mostrar información del usuario actual
+            document.getElementById('info-usuario').innerHTML = `<p>Conectado como: <strong>${usuario.alias}</strong> (ID: ${usuario.id})</p>`;
+            
             // Función para cargar usuarios
             async function cargarUsuarios() {
                 try {
                     const { data, error } = await supabase
                         .from('usuarios')
-                        .select('*');
+                        .select('id, alias, en_linea, ultima_conexion');
                     
                     if (error) {
                         console.error('Error al cargar usuarios:', error);
                         document.getElementById('usuarios-lista').innerHTML = 
-                            '<p>Error al cargar usuarios. Intente nuevamente más tarde.</p>';
+                            '<p>Error al cargar usuarios: ' + error.message + '</p>';
                         return;
                     }
                     
@@ -68,46 +112,44 @@
                     const listaElement = document.getElementById('usuarios-lista');
                     
                     if (data && data.length > 0) {
-                        let html = '<h2>Usuarios</h2><ul>';
+                        let html = '<h2>Usuarios disponibles</h2><ul>';
                         
                         data.forEach(user => {
-                            // Saltamos si es el usuario actual
+                            // No mostrar el usuario actual en la lista
                             if (user.id === usuario.id) return;
                             
-                            html += `<li data-user-id="${user.id}" data-user-name="${user.alias}">${user.alias}</li>`;
+                            const ultimaConexion = new Date(user.ultima_conexion);
+                            const ahora = new Date();
+                            const diferenciaMinutos = Math.floor((ahora - ultimaConexion) / (1000 * 60));
+                            const estadoTexto = diferenciaMinutos < 5 ? "Activo recientemente" : `Última vez hace ${diferenciaMinutos} minutos`;
+                            
+                            html += `<li onclick="window.abrirChatUsuario(${user.id}, '${user.alias}')">
+                                        ${user.alias} - ${estadoTexto}
+                                    </li>`;
                         });
                         
-                        html += `<li>${usuario.alias} (Tú)</li>`;
                         html += '</ul>';
-                        
                         listaElement.innerHTML = html;
-                        
-                        // Añadir event listeners a los elementos de la lista
-                        document.querySelectorAll('#usuarios-lista li[data-user-id]').forEach(li => {
-                            li.addEventListener('click', () => {
-                                const userId = li.getAttribute('data-user-id');
-                                const userName = li.getAttribute('data-user-name');
-                                abrirChat({id: userId, alias: userName});
-                            });
-                        });
                     } else {
                         listaElement.innerHTML = '<p>No hay usuarios registrados</p>';
                     }
                 } catch (err) {
                     console.error('Error inesperado:', err);
                     document.getElementById('usuarios-lista').innerHTML = 
-                        '<p>Error al conectar con el servidor.</p>';
+                        '<p>Error al conectar con el servidor: ' + err.message + '</p>';
                 }
             }
             
             // Función para marcar al usuario como en línea
             async function actualizarEstadoUsuario() {
                 try {
+                    const ahora = new Date().toISOString();
                     const { error } = await supabase
                         .from('usuarios')
                         .update({ 
                             en_linea: true,
-                            ultima_conexion: new Date().toISOString()
+                            ultima_conexion: ahora,
+                            ultima_actividad: ahora
                         })
                         .eq('id', usuario.id);
                         
@@ -120,6 +162,11 @@
                     console.error('Error al actualizar estado:', err);
                 }
             }
+            
+            // Exponer la función para abrir chat en window para poder llamarla desde HTML
+            window.abrirChatUsuario = function(userId, userAlias) {
+                abrirChat({ id: userId, alias: userAlias });
+            };
             
             // Función para abrir el chat con un usuario
             function abrirChat(user) {
@@ -155,37 +202,43 @@
                 try {
                     console.log('Cargando mensajes entre', usuario.id, 'y', currentChatUser.id);
                     
-                    // Consulta para obtener mensajes enviados y recibidos entre los dos usuarios
+                    // Realizar una consulta más específica
                     const { data, error } = await supabase
                         .from('mensajes')
                         .select('*')
+                        .or(`and(remitente_id.eq.${usuario.id},destinatario_id.eq.${currentChatUser.id}),and(remitente_id.eq.${currentChatUser.id},destinatario_id.eq.${usuario.id})`)
                         .order('created_at', { ascending: true });
                     
                     if (error) {
                         console.error('Error al cargar mensajes:', error);
+                        document.getElementById('chat-messages').innerHTML = 
+                            '<p>Error al cargar mensajes: ' + error.message + '</p>';
                         return;
                     }
                     
-                    console.log('Mensajes sin filtrar:', data);
-                    
-                    // Filtrar manualmente los mensajes entre estos dos usuarios específicos
-                    const mensajesFiltrados = data.filter(msg => 
-                        (msg.remitente_id === usuario.id && msg.destinatario_id === currentChatUser.id) ||
-                        (msg.remitente_id === currentChatUser.id && msg.destinatario_id === usuario.id)
-                    );
-                    
-                    console.log('Mensajes filtrados:', mensajesFiltrados);
+                    console.log('Mensajes cargados:', data);
                     
                     const chatMessages = document.getElementById('chat-messages');
                     chatMessages.innerHTML = '';
                     
-                    mensajesFiltrados.forEach(mensaje => {
-                        const esEnviado = mensaje.remitente_id === usuario.id;
-                        chatMessages.innerHTML += `<div>${esEnviado ? 'Tú: ' : currentChatUser.alias + ': '}${mensaje.contenido}</div>`;
-                    });
+                    if (data && data.length > 0) {
+                        data.forEach(mensaje => {
+                            const esEnviado = mensaje.remitente_id === usuario.id;
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = esEnviado ? 'message-sent' : 'message-received';
+                            messageDiv.textContent = `${esEnviado ? 'Tú: ' : currentChatUser.alias + ': '}${mensaje.contenido}`;
+                            chatMessages.appendChild(messageDiv);
+                        });
+                    } else {
+                        chatMessages.innerHTML = '<p>No hay mensajes. ¡Inicia la conversación!</p>';
+                    }
                     
+                    // Scroll al final
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
                 } catch (err) {
                     console.error('Error inesperado al cargar mensajes:', err);
+                    document.getElementById('chat-messages').innerHTML = 
+                        '<p>Error al cargar mensajes: ' + err.message + '</p>';
                 }
             }
             
@@ -199,10 +252,12 @@
                 if (!mensaje) return;
                 
                 try {
+                    const ahora = new Date().toISOString();
                     console.log('Enviando mensaje:', {
                         remitente_id: usuario.id,
                         destinatario_id: currentChatUser.id,
-                        contenido: mensaje
+                        contenido: mensaje,
+                        created_at: ahora
                     });
                     
                     const { data, error } = await supabase
@@ -211,30 +266,49 @@
                             remitente_id: usuario.id,
                             destinatario_id: currentChatUser.id,
                             contenido: mensaje,
-                            created_at: new Date().toISOString()
+                            created_at: ahora
                         }]);
                     
                     if (error) {
                         console.error('Error al enviar mensaje:', error);
+                        alert('Error al enviar mensaje: ' + error.message);
                         return;
                     }
                     
-                    console.log('Mensaje enviado con éxito:', data);
+                    console.log('Mensaje enviado con éxito');
                     
                     // Limpiar input
                     messageInput.value = '';
                     
-                    // Recargar mensajes para mostrar el mensaje enviado
-                    cargarMensajes();
+                    // Añadir inmediatamente el mensaje al chat para mejor UX
+                    const chatMessages = document.getElementById('chat-messages');
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message-sent';
+                    messageDiv.textContent = `Tú: ${mensaje}`;
+                    chatMessages.appendChild(messageDiv);
+                    
+                    // Scroll al final
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    
+                    // Actualizar última actividad del usuario
+                    actualizarEstadoUsuario();
                 } catch (err) {
                     console.error('Error al enviar mensaje:', err);
+                    alert('Error al enviar mensaje: ' + err.message);
                 }
             }
             
             // Event listeners
             document.getElementById('logout-btn').addEventListener('click', function() {
-                sessionStorage.removeItem('usuario');
-                window.location.href = 'index.html';
+                // Marcar usuario como desconectado antes de salir
+                supabase
+                    .from('usuarios')
+                    .update({ en_linea: false })
+                    .eq('id', usuario.id)
+                    .then(() => {
+                        sessionStorage.removeItem('usuario');
+                        window.location.href = 'index.html';
+                    });
             });
             
             document.getElementById('close-chat').addEventListener('click', function() {
@@ -257,18 +331,24 @@
             // Cargar usuarios inicialmente
             cargarUsuarios();
             
-            // Recargar usuarios periódicamente
-            setInterval(cargarUsuarios, 30000);
+            // Recargar usuarios cada 15 segundos
+            setInterval(cargarUsuarios, 15000);
             
-            // Limpiar intervalo de chat al cerrar la página
+            // Al cerrar la página, marcar usuario como desconectado
             window.addEventListener('beforeunload', function() {
                 if (chatInterval) clearInterval(chatInterval);
+                
+                // Usando navigator.sendBeacon para enviar una solicitud final incluso si la página se está cerrando
+                const formData = new FormData();
+                formData.append('id', usuario.id);
+                navigator.sendBeacon('/api/desconectar', formData);
+                
+                // También intentamos la actualización directa (aunque puede no completarse)
+                supabase
+                    .from('usuarios')
+                    .update({ en_linea: false })
+                    .eq('id', usuario.id);
             });
-            
-            // Función para crear el cliente de Supabase (corrección)
-            function supabaseCreateClient(url, key) {
-                return supabase.createClient(url, key);
-            }
         });
     </script>
 </body>
