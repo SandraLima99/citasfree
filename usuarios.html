@@ -29,6 +29,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
+        }
+        li:hover {
+            background-color: #f0f0f0;
         }
         .header {
             display: flex;
@@ -55,24 +59,8 @@
             border-radius: 4px;
             font-size: 12px;
             font-weight: bold;
-        }
-        .online {
             background-color: #4CAF50;
             color: white;
-        }
-        .offline {
-            background-color: #9e9e9e;
-            color: white;
-        }
-        .away {
-            background-color: #ff9800;
-            color: white;
-        }
-        .last-seen {
-            font-size: 11px;
-            color: #777;
-            display: block;
-            margin-top: 3px;
         }
         .user-info {
             display: flex;
@@ -84,28 +72,80 @@
         .you {
             color: #2196F3;
         }
-        .switch-view {
-            text-align: center;
-            margin-bottom: 20px;
+        
+        /* Estilos para el chat */
+        .chat-container {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            right: 20px;
+            width: 300px;
+            height: 400px;
+            background-color: white;
+            border-radius: 5px 5px 0 0;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            flex-direction: column;
         }
-        .switch-btn {
+        .chat-header {
+            padding: 10px;
+            background-color: #2196F3;
+            color: white;
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h3 {
+            margin: 0;
+        }
+        .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            padding: 8px 12px;
+            border-radius: 15px;
+            margin-bottom: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .message-sent {
+            background-color: #DCF8C6;
+            align-self: flex-end;
+        }
+        .message-received {
+            background-color: #E5E5EA;
+            align-self: flex-start;
+        }
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        .chat-input input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            margin-right: 5px;
+        }
+        .chat-input button {
             padding: 8px 12px;
             background-color: #2196F3;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 20px;
             cursor: pointer;
-            margin: 0 5px;
-        }
-        .active {
-            background-color: #0b7dda;
-        }
-        .user-active-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 5px;
-            display: inline-block;
         }
         
         /* Estilos responsivos para móviles */
@@ -128,14 +168,12 @@
                 margin-top: 10px;
             }
             
-            .switch-view {
-                display: flex;
-                justify-content: center;
-            }
-            
-            .switch-btn {
-                padding: 6px 10px;
-                font-size: 14px;
+            .chat-container {
+                width: 100%;
+                height: 80%;
+                left: 0;
+                right: 0;
+                bottom: 0;
             }
         }
     </style>
@@ -146,13 +184,22 @@
         <button class="logout" id="logout-btn">Cerrar sesión</button>
     </div>
     
-    <div class="switch-view">
-        <button class="switch-btn active" id="all-users">Todos los usuarios</button>
-        <button class="switch-btn" id="online-users">Solo en línea</button>
-    </div>
-    
     <div id="usuarios-lista">
         <h2>Cargando usuarios...</h2>
+    </div>
+    
+    <div class="chat-container" id="chat-container">
+        <div class="chat-header">
+            <h3 id="chat-title">Chat</h3>
+            <button class="close-chat" id="close-chat">&times;</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <!-- Los mensajes se cargarán aquí -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="message-input" placeholder="Escribe un mensaje...">
+            <button id="send-message">Enviar</button>
+        </div>
     </div>
 
     <!-- Cargar la versión específica de Supabase desde CDN -->
@@ -165,14 +212,9 @@
             const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvc3NoaXZ4Y3hseXBuc2J2Z2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzEyODEsImV4cCI6MjA2MDUwNzI4MX0.Vrs5L1Lbw7BwgagXB0Zy5SIrOFe9wBL2fKjBP6vdXtE';
             const client = supabase.createClient(supabaseUrl, supabaseKey);
             
-            // Estado de visualización
-            let mostrarSoloEnLinea = false;
-            
-            // Variables de detección de actividad
-            let tiempoInactivo = 0;
-            const TIEMPO_INACTIVO_LIMITE = 5; // minutos para considerar inactivo
-            let inactividadTimer;
-            let ultimaActividad = new Date();
+            // Variables para el chat
+            let currentChatUser = null;
+            let chatInterval = null;
             
             // Verificar si el usuario está autenticado
             const usuarioJSON = sessionStorage.getItem('usuario');
@@ -182,84 +224,13 @@
             }
             
             const usuario = JSON.parse(usuarioJSON);
-            console.log("Usuario actual:", usuario);
             
-            // Formatear fecha con mayor precisión
-            function formatearFecha(fechaStr) {
-                if (!fechaStr) return 'Desconocido';
-                
-                const fecha = new Date(fechaStr);
-                const ahora = new Date();
-                const diferenciaMilisegundos = ahora - fecha;
-                const diferenciaMinutos = Math.floor(diferenciaMilisegundos / (1000 * 60));
-                
-                if (diferenciaMinutos < 1) {
-                    return 'Ahora mismo';
-                } else if (diferenciaMinutos === 1) {
-                    return 'Hace 1 minuto';
-                } else if (diferenciaMinutos < 60) {
-                    return `Hace ${diferenciaMinutos} minutos`;
-                } else if (diferenciaMinutos < 120) {
-                    return 'Hace 1 hora';
-                } else if (diferenciaMinutos < 24 * 60) {
-                    const horas = Math.floor(diferenciaMinutos / 60);
-                    return `Hace ${horas} horas`;
-                } else if (diferenciaMinutos < 48 * 60) {
-                    return 'Ayer';
-                } else {
-                    const dia = fecha.getDate().toString().padStart(2, '0');
-                    const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-                    const year = fecha.getFullYear();
-                    const hora = fecha.getHours().toString().padStart(2, '0');
-                    const minutos = fecha.getMinutes().toString().padStart(2, '0');
-                    return `${dia}/${mes}/${year} ${hora}:${minutos}`;
-                }
-            }
-            
-            // Función para determinar si un usuario está realmente activo - CORREGIDA
-            function determinarEstadoActividad(user) {
-                // Siempre mostramos como online al usuario actual
-                if (user.id === usuario.id) {
-                    return 'online';
-                }
-                
-                // Si el usuario no está en línea, directamente es offline
-                if (user.en_linea === false) {
-                    return 'offline';
-                }
-                
-                // Si el usuario está en línea, verificamos si está ausente
-                if (user.ultima_actividad) {
-                    const ultimaAct = new Date(user.ultima_actividad);
-                    const ahora = new Date();
-                    const minutosSinActividad = Math.floor((ahora - ultimaAct) / (1000 * 60));
-                    
-                    if (minutosSinActividad > TIEMPO_INACTIVO_LIMITE) {
-                        return 'away';
-                    }
-                }
-                
-                return 'online';
-            }
-            
-            // Función para cargar usuarios - CORREGIDA
+            // Función para cargar usuarios (ahora todos aparecen en línea)
             async function cargarUsuarios() {
                 try {
-                    console.log("Cargando usuarios...");
-                    
-                    let query = client
+                    const { data, error } = await client
                         .from('usuarios')
                         .select('*');
-                    
-                    if (mostrarSoloEnLinea) {
-                        query = query.eq('en_linea', true);
-                    }
-                    
-                    // Ordenar después de la consulta principal para evitar problemas
-                    query = query.order('en_linea', { ascending: false })
-                                 .order('ultima_conexion', { ascending: false });
-                    
-                    const { data, error } = await query;
                     
                     if (error) {
                         console.error('Error al cargar usuarios:', error);
@@ -268,59 +239,34 @@
                         return;
                     }
                     
-                    console.log("Usuarios cargados:", data);
-                    
                     const listaElement = document.getElementById('usuarios-lista');
                     
                     if (data && data.length > 0) {
                         const ul = document.createElement('ul');
                         
                         data.forEach(user => {
-                            console.log(`Usuario ${user.alias}: en_linea=${user.en_linea}, id=${user.id}`);
+                            // Saltamos si es el usuario actual
+                            if (user.id === usuario.id) return;
                             
                             const li = document.createElement('li');
+                            li.dataset.userId = user.id;
+                            li.dataset.userName = user.alias;
+                            li.addEventListener('click', () => abrirChat(user));
                             
-                            // Div para información del usuario
+                            // Información del usuario
                             const userInfo = document.createElement('div');
                             userInfo.className = 'user-info';
                             
                             // Nombre de usuario
                             const userName = document.createElement('span');
                             userName.className = 'user-name';
-                            if (user.id === usuario.id) {
-                                userName.classList.add('you');
-                                userName.textContent = `${user.alias} (Tú)`;
-                            } else {
-                                userName.textContent = user.alias;
-                            }
+                            userName.textContent = user.alias;
                             userInfo.appendChild(userName);
                             
-                            // Mostrar última vez para todos (conectados y desconectados)
-                            const lastSeen = document.createElement('span');
-                            lastSeen.className = 'last-seen';
-                            
-                            // Si está en línea, mostrar cuánto tiempo lleva conectado
-                            if (user.en_linea) {
-                                lastSeen.textContent = `Conectado desde: ${formatearFecha(user.ultima_conexion)}`;
-                            } else {
-                                lastSeen.textContent = `Última vez: ${formatearFecha(user.ultima_conexion)}`;
-                            }
-                            userInfo.appendChild(lastSeen);
-                            
-                            // Estado de conexión con indicador visual de actividad
-                            const estadoActividad = determinarEstadoActividad(user);
-                            console.log(`Estado de ${user.alias}: ${estadoActividad}`);
-                            
+                            // Estado siempre en línea
                             const status = document.createElement('span');
-                            status.className = `status ${estadoActividad}`;
-                            
-                            if (estadoActividad === 'online') {
-                                status.textContent = 'En línea';
-                            } else if (estadoActividad === 'away') {
-                                status.textContent = 'Ausente';
-                            } else {
-                                status.textContent = 'Desconectado';
-                            }
+                            status.className = 'status';
+                            status.textContent = 'En línea';
                             
                             li.appendChild(userInfo);
                             li.appendChild(status);
@@ -328,12 +274,30 @@
                             ul.appendChild(li);
                         });
                         
+                        // Añadimos al usuario actual (tú) al final de la lista
+                        const liTu = document.createElement('li');
+                        
+                        const userInfoTu = document.createElement('div');
+                        userInfoTu.className = 'user-info';
+                        
+                        const userNameTu = document.createElement('span');
+                        userNameTu.className = 'user-name you';
+                        userNameTu.textContent = `${usuario.alias} (Tú)`;
+                        userInfoTu.appendChild(userNameTu);
+                        
+                        const statusTu = document.createElement('span');
+                        statusTu.className = 'status';
+                        statusTu.textContent = 'En línea';
+                        
+                        liTu.appendChild(userInfoTu);
+                        liTu.appendChild(statusTu);
+                        
+                        ul.appendChild(liTu);
+                        
                         listaElement.innerHTML = '';
                         listaElement.appendChild(ul);
                     } else {
-                        listaElement.innerHTML = mostrarSoloEnLinea ? 
-                            '<p class="no-users">No hay usuarios en línea en este momento</p>' :
-                            '<p class="no-users">No hay usuarios registrados</p>';
+                        listaElement.innerHTML = '<p class="no-users">No hay usuarios registrados</p>';
                     }
                 } catch (err) {
                     console.error('Error inesperado:', err);
@@ -342,160 +306,149 @@
                 }
             }
             
-            // Función para detectar actividad y actualizar estado
-            function detectarActividad() {
-                clearTimeout(inactividadTimer);
-                
-                // Actualizar la última actividad del usuario
-                ultimaActividad = new Date();
-                
-                // Actualizar en la base de datos cada cierto tiempo para no sobrecargar
-                actualizarUltimaActividad();
-                
-                // Reiniciar el contador de inactividad
-                tiempoInactivo = 0;
-                
-                // Configurar nuevo temporizador
-                inactividadTimer = setTimeout(function() {
-                    tiempoInactivo += 1;
-                    // Si supera el límite, marcar como ausente pero todavía conectado
-                    if (tiempoInactivo >= TIEMPO_INACTIVO_LIMITE) {
-                        console.log("Usuario inactivo por " + TIEMPO_INACTIVO_LIMITE + " minutos");
-                    }
-                }, 60000); // Verificar cada minuto
-            }
-            
-            // Actualizar estado y hora de conexión del usuario - CORREGIDA
-            async function actualizarEstadoUsuario(enLinea) {
+            // Función para marcar al usuario como en línea (ahora simplificada)
+            async function actualizarEstadoUsuario() {
                 try {
-                    const timestamp = new Date().toISOString();
-                    console.log(`Actualizando estado de usuario ${usuario.id} a ${enLinea ? 'en línea' : 'desconectado'}`);
-                    
-                    const { data, error } = await client
+                    await client
                         .from('usuarios')
                         .update({ 
-                            en_linea: enLinea,
-                            ultima_conexion: timestamp,
-                            ultima_actividad: timestamp
+                            en_linea: true,
+                            ultima_conexion: new Date().toISOString()
                         })
-                        .eq('id', usuario.id)
-                        .select();
+                        .eq('id', usuario.id);
+                } catch (err) {
+                    console.error('Error al actualizar estado:', err);
+                }
+            }
+            
+            // Función para abrir el chat con un usuario
+            function abrirChat(user) {
+                const chatContainer = document.getElementById('chat-container');
+                const chatTitle = document.getElementById('chat-title');
+                const chatMessages = document.getElementById('chat-messages');
+                
+                // Guardar usuario actual del chat
+                currentChatUser = user;
+                
+                // Configurar título del chat
+                chatTitle.textContent = `Chat con ${user.alias}`;
+                
+                // Vaciar mensajes anteriores
+                chatMessages.innerHTML = '';
+                
+                // Mostrar el contenedor del chat
+                chatContainer.style.display = 'flex';
+                
+                // Cargar mensajes existentes
+                cargarMensajes();
+                
+                // Iniciar intervalo para recargar mensajes
+                if (chatInterval) clearInterval(chatInterval);
+                chatInterval = setInterval(cargarMensajes, 3000);
+            }
+            
+            // Función para cargar mensajes
+            async function cargarMensajes() {
+                if (!currentChatUser) return;
+                
+                try {
+                    // Obtenemos mensajes donde el remitente o destinatario es el usuario actual
+                    const { data, error } = await client
+                        .from('mensajes')
+                        .select('*')
+                        .or(`remitente_id.eq.${usuario.id},destinatario_id.eq.${usuario.id}`)
+                        .or(`remitente_id.eq.${currentChatUser.id},destinatario_id.eq.${currentChatUser.id}`)
+                        .order('created_at', { ascending: true });
                     
                     if (error) {
-                        console.error('Error al actualizar estado:', error);
-                    } else {
-                        console.log('Estado actualizado correctamente:', data);
+                        console.error('Error al cargar mensajes:', error);
+                        return;
                     }
+                    
+                    // Filtrar solo mensajes entre el usuario actual y el usuario del chat
+                    const mensajesFiltrados = data.filter(msg => 
+                        (msg.remitente_id === usuario.id && msg.destinatario_id === currentChatUser.id) ||
+                        (msg.remitente_id === currentChatUser.id && msg.destinatario_id === usuario.id)
+                    );
+                    
+                    const chatMessages = document.getElementById('chat-messages');
+                    chatMessages.innerHTML = '';
+                    
+                    mensajesFiltrados.forEach(mensaje => {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = mensaje.remitente_id === usuario.id ? 'message message-sent' : 'message message-received';
+                        messageDiv.textContent = mensaje.contenido;
+                        chatMessages.appendChild(messageDiv);
+                    });
+                    
+                    // Scroll al final
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
                 } catch (err) {
                     console.error('Error inesperado:', err);
                 }
             }
             
-            // Función para actualizar solo la última actividad - CORREGIDA
-            async function actualizarUltimaActividad() {
+            // Función para enviar mensaje
+            async function enviarMensaje() {
+                if (!currentChatUser) return;
+                
+                const messageInput = document.getElementById('message-input');
+                const mensaje = messageInput.value.trim();
+                
+                if (!mensaje) return;
+                
                 try {
-                    const timestamp = new Date().toISOString();
+                    await client
+                        .from('mensajes')
+                        .insert({
+                            remitente_id: usuario.id,
+                            destinatario_id: currentChatUser.id,
+                            contenido: mensaje,
+                            created_at: new Date().toISOString()
+                        });
                     
-                    const { data, error } = await client
-                        .from('usuarios')
-                        .update({ 
-                            ultima_actividad: timestamp,
-                            en_linea: true // Aseguramos que el usuario esté marcado como en línea
-                        })
-                        .eq('id', usuario.id)
-                        .select();
+                    // Limpiar input
+                    messageInput.value = '';
                     
-                    if (error) {
-                        console.error('Error al actualizar última actividad:', error);
-                    } else {
-                        console.log('Actividad actualizada correctamente:', data);
-                    }
+                    // Recargar mensajes
+                    cargarMensajes();
                 } catch (err) {
-                    console.error('Error inesperado:', err);
+                    console.error('Error al enviar mensaje:', err);
                 }
             }
             
-            // Detectores de actividad del usuario
-            window.addEventListener('mousemove', detectarActividad);
-            window.addEventListener('keypress', detectarActividad);
-            window.addEventListener('click', detectarActividad);
-            window.addEventListener('scroll', detectarActividad);
-            window.addEventListener('touchstart', detectarActividad);
-            
-            // Marcar usuario como en línea al cargar la página
-            actualizarEstadoUsuario(true);
-            
-            // Iniciar detección de actividad
-            detectarActividad();
-            
-            // Cargar la lista de usuarios
-            cargarUsuarios();
-            
-            // Configurar temporizador para recargar usuarios cada 15 segundos (más frecuente)
-            const intervalo = setInterval(cargarUsuarios, 15000);
-            
-            // Actualizar actividad cada 2 minutos sin importar si hay actividad visible
-            const intervaloActividad = setInterval(actualizarUltimaActividad, 120000);
-            
-            // Cambiar vista entre todos los usuarios y solo los conectados
-            document.getElementById('all-users').addEventListener('click', function() {
-                if (mostrarSoloEnLinea) {
-                    mostrarSoloEnLinea = false;
-                    document.getElementById('all-users').classList.add('active');
-                    document.getElementById('online-users').classList.remove('active');
-                    cargarUsuarios();
-                }
-            });
-            
-            document.getElementById('online-users').addEventListener('click', function() {
-                if (!mostrarSoloEnLinea) {
-                    mostrarSoloEnLinea = true;
-                    document.getElementById('online-users').classList.add('active');
-                    document.getElementById('all-users').classList.remove('active');
-                    cargarUsuarios();
-                }
-            });
-            
-            // Configurar botón de cerrar sesión
-            document.getElementById('logout-btn').addEventListener('click', async function() {
-                await actualizarEstadoUsuario(false);
+            // Event listeners
+            document.getElementById('logout-btn').addEventListener('click', function() {
                 sessionStorage.removeItem('usuario');
                 window.location.href = 'index.html';
             });
             
-            // Verificar si el documento tiene foco para saber si el usuario está activo
-            document.addEventListener('visibilitychange', function() {
-                if (document.visibilityState === 'visible') {
-                    // El usuario está viendo la página
-                    actualizarEstadoUsuario(true);
-                    detectarActividad();
-                } else {
-                    // El usuario cambió a otra pestaña/aplicación pero no cerró la página
-                    // No cambiamos el estado en_linea pero sí registramos la inactividad
-                    tiempoInactivo = TIEMPO_INACTIVO_LIMITE;
+            document.getElementById('close-chat').addEventListener('click', function() {
+                document.getElementById('chat-container').style.display = 'none';
+                currentChatUser = null;
+                if (chatInterval) clearInterval(chatInterval);
+            });
+            
+            document.getElementById('send-message').addEventListener('click', enviarMensaje);
+            
+            document.getElementById('message-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    enviarMensaje();
                 }
             });
             
-            // Marcar usuario como fuera de línea al cerrar la página - CORREGIDA
-            window.addEventListener('beforeunload', function() {
-                // Usar Fetch API de forma síncrona en lugar de sendBeacon
-                const xhr = new XMLHttpRequest();
-                xhr.open('PATCH', `${supabaseUrl}/rest/v1/usuarios?id=eq.${usuario.id}`, false);
-                xhr.setRequestHeader('apikey', supabaseKey);
-                xhr.setRequestHeader('Authorization', `Bearer ${supabaseKey}`);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.setRequestHeader('Prefer', 'return=minimal');
-                xhr.send(JSON.stringify({
-                    en_linea: false,
-                    ultima_conexion: new Date().toISOString()
-                }));
-            });
+            // Marcar usuario como en línea
+            actualizarEstadoUsuario();
             
-            // Limpiar intervalos al descargar la página
-            window.addEventListener('unload', function() {
-                clearInterval(intervalo);
-                clearInterval(intervaloActividad);
-                clearTimeout(inactividadTimer);
+            // Cargar usuarios inicialmente
+            cargarUsuarios();
+            
+            // Recargar usuarios periódicamente
+            setInterval(cargarUsuarios, 30000);
+            
+            // Limpiar intervalo de chat al cerrar la página
+            window.addEventListener('beforeunload', function() {
+                if (chatInterval) clearInterval(chatInterval);
             });
         });
     </script>
