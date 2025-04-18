@@ -126,19 +126,6 @@
 <body>
     <h1>Chat CitasFree <span class="hot-label">HOT</span></h1>
     
-    <!-- Anuncio superior para escritorio -->
-    <div class="ad-container ad-desktop">
-        <script type="text/javascript">
-            atOptions = { 'key' : '8f88d057e1fda5f2cb45b6efe1cb51c4', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
-        </script>
-        <script type="text/javascript" src="//www.highperformanceformat.com/8f88d057e1fda5f2cb45b6efe1cb51c4/invoke.js"></script>
-    </div>
-    
-    <!-- Anuncio superior para móvil -->
-    <div class="ad-container ad-mobile">
-        <script type='text/javascript' src='//pl26408505.profitableratecpm.com/54/d4/33/54d43392e0a2c7ce4f5d866d24c24463.js'></script>
-    </div>
-    
     <div class="login-container">
         <h2>Iniciar Sesión</h2>
         
@@ -150,8 +137,8 @@
         </div>
         
         <div class="form-group">
-            <label for="password">Contraseña:</label>
-            <input type="password" id="password" name="password" placeholder="Tu contraseña" required>
+            <label for="pin">PIN:</label>
+            <input type="text" id="pin" name="pin" placeholder="Tu PIN" required>
         </div>
         
         <button type="button" onclick="iniciarSesion()">Conectar al Chat</button>
@@ -161,55 +148,33 @@
         </div>
     </div>
     
-    <!-- Anuncio central para todos los dispositivos -->
-    <div class="ad-container">
-        <script type="text/javascript">
-            atOptions = { 'key' : '8f88d057e1fda5f2cb45b6efe1cb51c4', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
-        </script>
-        <script type="text/javascript" src="//www.highperformanceformat.com/8f88d057e1fda5f2cb45b6efe1cb51c4/invoke.js"></script>
-    </div>
-    
-    <!-- Segundo bloque de anuncios -->
-    <div class="ad-container">
-        <script async="async" data-cfasync="false" src="//pl26408509.profitableratecpm.com/83f6589a1f5518ac29be91871ea63adf/invoke.js"></script>
-        <div id="container-83f6589a1f5518ac29be91871ea63adf"></div>
-    </div>
-    
-    <!-- Primero carga la librería de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <!-- Luego tu código -->
     <script>
         const supabaseUrl = 'https://aosshivxcxlypnsbvghc.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvc3NoaXZ4Y3hseXBuc2J2Z2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzEyODEsImV4cCI6MjA2MDUwNzI4MX0.Vrs5L1Lbw7BwgagXB0Zy5SIrOFe9wBL2fKjBP6vdXtE';
         
-        // Usar createClient desde el objeto global importado
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
         
-        // Verificar si ya hay una sesión activa
         window.onload = function() {
             const userId = localStorage.getItem('userId');
             const userAlias = localStorage.getItem('userAlias');
             
             if (userId && userAlias) {
-                // Ya hay sesión, redirigir a la página de chat
                 window.location.href = 'usuarios.html';
             }
         };
         
-        // Función para iniciar sesión
         async function iniciarSesion() {
             const alias = document.getElementById('alias').value;
-            const password = document.getElementById('password').value;
+            const pin = document.getElementById('pin').value;
             const errorMessageDiv = document.getElementById('error-message');
             
-            // Validación básica
-            if (!alias || !password) {
+            if (!alias || !pin) {
                 mostrarError('Por favor completa todos los campos');
                 return;
             }
             
             try {
-                // Buscar usuario por alias
                 const { data, error } = await supabaseClient
                     .from('usuarios')
                     .select('*')
@@ -218,7 +183,6 @@
                 
                 if (error) {
                     mostrarError('Error en la consulta. Inténtalo de nuevo.');
-                    console.error('Error:', error);
                     return;
                 }
                 
@@ -227,51 +191,34 @@
                     return;
                 }
                 
-                // En un entorno real usarías hash de contraseñas
-                // Aquí estamos haciendo una comparación simple
-                if (data.password === password) {
-                    // Guardar información en localStorage
+                if (data.pin === pin) {
                     localStorage.setItem('userId', data.id);
                     localStorage.setItem('userAlias', data.alias);
-                    
-                    // Redirigir a la página de chat
                     window.location.href = 'usuarios.html';
                 } else {
-                    mostrarError('Contraseña incorrecta');
+                    mostrarError('PIN incorrecto');
                 }
             } catch (err) {
                 mostrarError('Error al iniciar sesión');
-                console.error('Error:', err);
             }
         }
         
-        // Mostrar mensaje de error
         function mostrarError(mensaje) {
             const errorMessageDiv = document.getElementById('error-message');
             errorMessageDiv.textContent = mensaje;
             errorMessageDiv.style.display = 'block';
             
-            // Ocultar después de 5 segundos
             setTimeout(() => {
                 errorMessageDiv.style.display = 'none';
             }, 5000);
         }
         
-        // Manejar Enter en el campo de contraseña
-        document.getElementById('password').addEventListener('keypress', function(e) {
+        document.getElementById('pin').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 iniciarSesion();
             }
         });
     </script>
-    
-    <!-- Anuncio inferior para todos los dispositivos -->
-    <div class="ad-container">
-        <script type="text/javascript">
-            atOptions = { 'key' : '8f88d057e1fda5f2cb45b6efe1cb51c4', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
-        </script>
-        <script type="text/javascript" src="//www.highperformanceformat.com/8f88d057e1fda5f2cb45b6efe1cb51c4/invoke.js"></script>
-    </div>
 </body>
 </html>
