@@ -151,6 +151,7 @@
         .message-input-container {
             display: flex;
             margin-top: 10px;
+            align-items: center;
         }
         
         .message-input {
@@ -174,11 +175,89 @@
             display: inline-block;
         }
         
+        .status-offline {
+            background-color: #f38ba8;
+        }
+        
         .ad-container {
             width: 100%;
             text-align: center;
             margin: 20px 0;
             clear: both;
+        }
+        
+        .chat-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+        
+        .message-sent .chat-image,
+        .message-received .chat-image {
+            margin-top: 5px;
+        }
+        
+        .profile-upload-container {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .image-upload-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: #585b70;
+            color: #cdd6f4;
+        }
+        
+        .image-icon {
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+        }
+        
+        .modal-content {
+            margin: 10% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 500px;
+            background-color: #313244;
+            border-radius: 8px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #cdd6f4;
+        }
+        
+        #imagePreview {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 10px 0;
         }
         
         @media (max-width: 768px) {
@@ -201,6 +280,11 @@
             <img id="current-user-avatar" src="/api/placeholder/50/50" alt="Avatar" class="user-profile-pic">
             <div>
                 <span><span class="status-indicator"></span> Conectado como: <strong id="current-user-name"></strong></span>
+                <div class="profile-upload-container">
+                    <button onclick="abrirModalFotoPerfil()" class="image-upload-btn">
+                        <span class="image-icon">📷</span> Cambiar foto de perfil
+                    </button>
+                </div>
             </div>
         </div>
         <button class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
@@ -228,10 +312,49 @@
                 
                 <div class="message-input-container">
                     <input type="text" id="texto" class="message-input" placeholder="Escribe tu mensaje" disabled>
+                    <button id="upload-photo-btn" onclick="abrirModalFoto()" disabled>
+                        <span class="image-icon">📷</span>
+                    </button>
                     <button id="send-button" onclick="enviarMensaje()" disabled>Enviar</button>
                 </div>
             </div>
             <div style="clear: both;"></div>
+        </div>
+    </div>
+    
+    <!-- Modal para subir foto de perfil -->
+    <div id="profilePhotoModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModalFotoPerfil()">&times;</span>
+            <h2>Cambiar foto de perfil</h2>
+            <input type="file" id="profilePhotoInput" accept="image/*">
+            <img id="profilePreview" style="display: none; max-width: 100%; margin: 10px 0;">
+            <div style="margin-top: 15px;">
+                <button onclick="subirFotoPerfil()">Guardar</button>
+                <button onclick="cerrarModalFotoPerfil()" style="background-color: #585b70;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para subir foto en chat -->
+    <div id="photoModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModalFoto()">&times;</span>
+            <h2>Enviar una foto</h2>
+            <input type="file" id="photoInput" accept="image/*">
+            <img id="imagePreview" style="display: none;">
+            <div style="margin-top: 15px;">
+                <button onclick="enviarFoto()">Enviar</button>
+                <button onclick="cerrarModalFoto()" style="background-color: #585b70;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para ver foto ampliada -->
+    <div id="viewPhotoModal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <span class="close" onclick="cerrarModalVerFoto()">&times;</span>
+            <img id="enlargedImage" style="max-width: 100%; max-height: 80vh;">
         </div>
     </div>
     
@@ -257,7 +380,10 @@
         let currentUser = null;
         let selectedUser = null;
         let messageCheckInterval = null;
+        let userStatusInterval = null;
         let lastMessageTime = new Date().toISOString();
+        let selectedPhotoFile = null;
+        let selectedProfilePhotoFile = null;
         
         // Cargar sesión al iniciar la página
         window.onload = async function() {
@@ -270,7 +396,97 @@
                     enviarMensaje();
                 }
             });
+            
+            // Configurar preview de imagen para foto de perfil
+            document.getElementById('profilePhotoInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    selectedProfilePhotoFile = file;
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = document.getElementById('profilePreview');
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Configurar preview de imagen para chat
+            document.getElementById('photoInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    selectedPhotoFile = file;
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = document.getElementById('imagePreview');
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
         };
+        
+        // Función para actualizar el estado en línea del usuario
+        async function actualizarEstadoEnLinea() {
+            if (!currentUser) return;
+            
+            try {
+                // Actualizar el estado en línea y la última vez activo
+                const { error } = await supabaseClient
+                    .from('usuarios')
+                    .update({ 
+                        online: true,
+                        last_active: new Date().toISOString()
+                    })
+                    .eq('id', currentUser.id);
+                
+                if (error) {
+                    console.error('Error actualizando estado online:', error);
+                }
+            } catch (err) {
+                console.error('Error en actualizarEstadoEnLinea:', err);
+            }
+        }
+        
+        // Verificar y actualizar estados de usuario
+        async function verificarEstadosUsuarios() {
+            try {
+                // Obtener todos los usuarios
+                const { data, error } = await supabaseClient
+                    .from('usuarios')
+                    .select('*');
+                
+                if (error) {
+                    console.error('Error obteniendo estados:', error);
+                    return;
+                }
+                
+                // Marcar usuarios como offline si no han estado activos en los últimos 2 minutos
+                const ahora = new Date();
+                const dosMinutosAtras = new Date(ahora - 2 * 60 * 1000).toISOString();
+                
+                const usuariosInactivos = data.filter(user => 
+                    user.online && user.last_active && user.last_active < dosMinutosAtras
+                );
+                
+                if (usuariosInactivos.length > 0) {
+                    // Actualizar usuarios inactivos a offline
+                    for (const user of usuariosInactivos) {
+                        await supabaseClient
+                            .from('usuarios')
+                            .update({ online: false })
+                            .eq('id', user.id);
+                    }
+                    
+                    // Actualizar la interfaz
+                    cargarUsuarios();
+                }
+            } catch (err) {
+                console.error('Error en verificarEstadosUsuarios:', err);
+            }
+        }
         
         // Función para cargar la sesión del usuario desde localStorage
         async function cargarSesion() {
@@ -296,12 +512,17 @@
                 currentUser = data;
                 document.getElementById('current-user-name').textContent = currentUser.alias;
                 
-                // Cargar avatar si existe
+                // Actualizar avatar si existe
                 if (userAvatar) {
                     document.getElementById('current-user-avatar').src = userAvatar;
                 } else if (data.avatar) {
                     document.getElementById('current-user-avatar').src = data.avatar;
+                    // Guardar en localStorage para futuras sesiones
+                    localStorage.setItem('userAvatar', data.avatar);
                 }
+                
+                // Actualizar estado en línea
+                actualizarEstadoEnLinea();
                 
                 // Cargar usuarios y mensajes
                 await cargarUsuarios();
@@ -309,9 +530,29 @@
                 
                 // Iniciar verificación automática de mensajes nuevos
                 iniciarActualizacionAutomatica();
+                
+                // Iniciar verificación automática de estado en línea
+                iniciarVerificacionEstado();
+                
+                // Configurar evento de cierre de ventana para marcar offline
+                window.addEventListener('beforeunload', marcarOffline);
             } else {
                 // Si el usuario no existe, limpiar localStorage y redirigir al login
                 cerrarSesion();
+            }
+        }
+        
+        // Marcar usuario como offline al cerrar la ventana
+        async function marcarOffline() {
+            if (currentUser) {
+                try {
+                    await supabaseClient
+                        .from('usuarios')
+                        .update({ online: false })
+                        .eq('id', currentUser.id);
+                } catch (err) {
+                    console.error('Error al marcar offline:', err);
+                }
             }
         }
         
@@ -326,6 +567,20 @@
             messageCheckInterval = setInterval(function() {
                 verificarMensajesNuevos();
             }, 5000);
+        }
+        
+        // Iniciar verificación de estado en línea
+        function iniciarVerificacionEstado() {
+            // Detener cualquier intervalo existente
+            if (userStatusInterval) {
+                clearInterval(userStatusInterval);
+            }
+            
+            // Actualizar estado cada 30 segundos
+            userStatusInterval = setInterval(function() {
+                actualizarEstadoEnLinea();
+                verificarEstadosUsuarios();
+            }, 30000);
         }
         
         // Verificar mensajes nuevos
@@ -363,7 +618,15 @@
         }
         
         // Cerrar sesión
-        function cerrarSesion() {
+        async function cerrarSesion() {
+            if (currentUser) {
+                // Marcar como offline antes de cerrar sesión
+                await supabaseClient
+                    .from('usuarios')
+                    .update({ online: false })
+                    .eq('id', currentUser.id);
+            }
+            
             localStorage.removeItem('userId');
             localStorage.removeItem('userAlias');
             localStorage.removeItem('userAvatar');
@@ -373,6 +636,14 @@
                 clearInterval(messageCheckInterval);
                 messageCheckInterval = null;
             }
+            
+            if (userStatusInterval) {
+                clearInterval(userStatusInterval);
+                userStatusInterval = null;
+            }
+            
+            // Eliminar evento de beforeunload
+            window.removeEventListener('beforeunload', marcarOffline);
             
             // Redirigir a la página de login
             window.location.href = 'index.html';
@@ -415,6 +686,11 @@
                 userDiv.dataset.userId = user.id;
                 userDiv.dataset.userAlias = user.alias;
                 
+                // Indicador de estado en línea
+                const statusIndicator = document.createElement('span');
+                statusIndicator.className = user.online ? 'status-indicator' : 'status-indicator status-offline';
+                userDiv.appendChild(statusIndicator);
+                
                 // Añadir avatar del usuario
                 const avatarImg = document.createElement('img');
                 avatarImg.className = 'user-avatar';
@@ -449,6 +725,7 @@
                     // Habilitar entrada de texto y botón de enviar
                     document.getElementById('texto').disabled = false;
                     document.getElementById('send-button').disabled = false;
+                    document.getElementById('upload-photo-btn').disabled = false;
                     
                     // Cargar mensajes con este usuario
                     listarMensajesConUsuario(user.id);
@@ -458,96 +735,320 @@
             });
         }
         
-        // Enviar mensaje
-        async function enviarMensaje() {
-            if (!currentUser) {
-                alert('Debes iniciar sesión para enviar mensajes');
+        // Funciones para manejar el modal de foto de perfil
+        function abrirModalFotoPerfil() {
+            document.getElementById('profilePhotoModal').style.display = 'block';
+            document.getElementById('profilePhotoInput').value = '';
+            document.getElementById('profilePreview').style.display = 'none';
+            selectedProfilePhotoFile = null;
+        }
+        
+        function cerrarModalFotoPerfil() {
+            document.getElementById('profilePhotoModal').style.display = 'none';
+        }
+        
+        // Funciones para manejar el modal de foto de chat
+        function abrirModalFoto() {
+            document.getElementById('photoModal').style.display = 'block';
+            document.getElementById('photoInput').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            selectedPhotoFile = null;
+        }
+        
+        function cerrarModalFoto() {
+            document.getElementById('photoModal').style.display = 'none';
+        }
+        
+        // Funciones para manejar el modal de ver foto
+        function abrirModalVerFoto(imgSrc) {
+            document.getElementById('viewPhotoModal').style.display = 'block';
+            document.getElementById('enlargedImage').src = imgSrc;
+        }
+        
+        function cerrarModalVerFoto() {
+            document.getElementById('viewPhotoModal').style.display = 'none';
+        }
+        
+        // Subir foto de perfil
+        async function subirFotoPerfil() {
+            if (!currentUser || !selectedProfilePhotoFile) {
+                alert('Debes seleccionar una imagen');
                 return;
             }
             
-            if (!selectedUser) {
-                alert('Por favor selecciona un usuario para enviar un mensaje');
-                return;
-            }
-            
-            const texto = document.getElementById('texto').value;
-            
-            if (!texto) {
-                alert('Por favor escribe un mensaje');
-                return;
-            }
-            
-            let { data, error } = await supabaseClient.from('mensajes').insert([
-                { remitente_id: currentUser.id, destinatario_id: selectedUser.id, mensaje: texto }
-            ]);
-            
-            if (error) {
-                alert('Error: ' + error.message);
-                console.error(error);
-            } else {
-                document.getElementById('texto').value = '';
-                listarMensajesConUsuario(selectedUser.id);
+            try {
+                // Mostrar mensaje de carga
+                alert('Subiendo foto de perfil...');
                 
-                // Actualizar el tiempo del último mensaje
-                lastMessageTime = new Date().toISOString();
+                // Generar nombre único para el archivo
+                const fileExt = selectedProfilePhotoFile.name.split('.').pop();
+                const fileName = `profile_${currentUser.id}_${Date.now()}.${fileExt}`;
+                const filePath = `avatars/${fileName}`;
+                
+                // Subir archivo a Supabase Storage
+                const { error: uploadError } = await supabaseClient
+                    .storage
+                    .from('media')
+                    .upload(filePath, selectedProfilePhotoFile);
+                
+                if (uploadError) {
+                    alert('Error al subir la imagen: ' + uploadError.message);
+                    console.error(uploadError);
+                    return;
+                }
+                
+                // Obtener URL pública del archivo
+                const { data: urlData } = await supabaseClient
+                    .storage
+                    .from('media')
+                    .getPublicUrl(filePath);
+                
+                if (!urlData || !urlData.publicUrl) {
+                    alert('Error al obtener la URL de la imagen');
+                    return;
+                }
+                
+                // Actualizar el avatar del usuario en la base de datos
+                const { error: updateError } = await supabaseClient
+                    .from('usuarios')
+                    .update({ avatar: urlData.publicUrl })
+                    .eq('id', currentUser.id);
+                
+                if (updateError) {
+                    alert('Error al actualizar el avatar: ' + updateError.message);
+                    console.error(updateError);
+                    return;
+                }
+                
+                // Actualizar interfaz y cerrar modal
+                document.getElementById('current-user-avatar').src = urlData.publicUrl;
+                
+                // Guardar en localStorage
+                localStorage.setItem('userAvatar', urlData.publicUrl);
+                
+                // Actualizar objeto de usuario actual
+                currentUser.avatar = urlData.publicUrl;
+                
+                cerrarModalFotoPerfil();
+                
+                alert('¡Foto de perfil actualizada con éxito!');
+            } catch (error) {
+                console.error('Error subiendo foto de perfil:', error);
+                alert('Ocurrió un error al subir la foto de perfil');
             }
         }
         
-        // Listar mensajes con un usuario específico
+        // Enviar foto en chat
+        async function enviarFoto() {
+            if (!currentUser || !selectedUser || !selectedPhotoFile) {
+                alert('Debes seleccionar una imagen');
+                return;
+            }
+            
+            try {
+                // Mostrar mensaje de carga
+                alert('Enviando foto...');
+                
+                // Generar nombre único para el archivo
+                const fileExt = selectedPhotoFile.name.split('.').pop();
+                // Continuación del código para enviar foto en chat
+                const fileName = `chat_${currentUser.id}_${Date.now()}.${fileExt}`;
+                const filePath = `chatimages/${fileName}`;
+                
+                // Subir archivo a Supabase Storage
+                const { error: uploadError } = await supabaseClient
+                    .storage
+                    .from('media')
+                    .upload(filePath, selectedPhotoFile);
+                
+                if (uploadError) {
+                    alert('Error al subir la imagen: ' + uploadError.message);
+                    console.error(uploadError);
+                    return;
+                }
+                
+                // Obtener URL pública del archivo
+                const { data: urlData } = await supabaseClient
+                    .storage
+                    .from('media')
+                    .getPublicUrl(filePath);
+                
+                if (!urlData || !urlData.publicUrl) {
+                    alert('Error al obtener la URL de la imagen');
+                    return;
+                }
+                
+                // Crear mensaje con imagen
+                const { error: msgError } = await supabaseClient
+                    .from('mensajes')
+                    .insert([
+                        {
+                            emisor_id: currentUser.id,
+                            destinatario_id: selectedUser.id,
+                            texto: '',
+                            imagen_url: urlData.publicUrl
+                        }
+                    ]);
+                
+                if (msgError) {
+                    alert('Error al enviar la imagen: ' + msgError.message);
+                    console.error(msgError);
+                    return;
+                }
+                
+                // Actualizar la vista de mensajes
+                listarMensajesConUsuario(selectedUser.id);
+                
+                // Cerrar modal y limpiar
+                cerrarModalFoto();
+                
+                // Mostrar mensaje de éxito
+                alert('¡Foto enviada con éxito!');
+            } catch (error) {
+                console.error('Error enviando foto:', error);
+                alert('Ocurrió un error al enviar la foto');
+            }
+        }
+        
+        // Función para listar mensajes (pantalla inicial)
+        async function listarMensajes() {
+            if (!currentUser) return;
+            
+            // Mostrar mensaje por defecto
+            const listaDiv = document.getElementById('lista');
+            listaDiv.innerHTML = '<p>Selecciona un usuario para comenzar a chatear</p>';
+        }
+        
+        // Función para listar mensajes con un usuario específico
         async function listarMensajesConUsuario(userId) {
             if (!currentUser) return;
             
-            // Obtener mensajes donde el usuario actual y el usuario seleccionado son remitentes o destinatarios
-            let { data, error } = await supabaseClient
+            // Consulta para obtener mensajes en ambas direcciones
+            const { data, error } = await supabaseClient
                 .from('mensajes')
-                .select('*, remitente:remitente_id(alias), destinatario:destinatario_id(alias)')
-                .or(`and(remitente_id.eq.${currentUser.id},destinatario_id.eq.${userId}),and(remitente_id.eq.${userId},destinatario_id.eq.${currentUser.id})`)
+                .select('*')
+                .or(`emisor_id.eq.${currentUser.id},destinatario_id.eq.${currentUser.id}`)
+                .or(`emisor_id.eq.${userId},destinatario_id.eq.${userId}`)
                 .order('enviado_en', { ascending: true });
-                
-            const lista = document.getElementById('lista');
-            lista.innerHTML = '';
+            
+            const listaDiv = document.getElementById('lista');
+            
+            // Limpiar lista
+            listaDiv.innerHTML = '';
             
             if (error) {
                 console.error('Error cargando mensajes:', error);
-                lista.innerHTML = '<p>Error al cargar mensajes</p>';
+                listaDiv.innerHTML = '<p>Error al cargar mensajes</p>';
                 return;
             }
             
-            if (data.length === 0) {
-                lista.innerHTML = '<p>No hay mensajes con este usuario</p>';
+            if (!data || data.length === 0) {
+                listaDiv.innerHTML = '<p>No hay mensajes aún. ¡Envía el primero!</p>';
                 return;
             }
             
-            data.forEach(msg => {
+            // Filtrar solo mensajes entre estos dos usuarios
+            const mensajesFiltrados = data.filter(mensaje => 
+                (mensaje.emisor_id === currentUser.id && mensaje.destinatario_id === userId) ||
+                (mensaje.emisor_id === userId && mensaje.destinatario_id === currentUser.id)
+            );
+            
+            if (mensajesFiltrados.length === 0) {
+                listaDiv.innerHTML = '<p>No hay mensajes aún. ¡Envía el primero!</p>';
+                return;
+            }
+            
+            // Mostrar mensajes
+            mensajesFiltrados.forEach(mensaje => {
+                const messageContainer = document.createElement('div');
+                messageContainer.className = 'message-container';
+                
                 const messageDiv = document.createElement('div');
-                messageDiv.className = 'message-container';
                 
-                const fechaFormateada = new Date(msg.enviado_en).toLocaleString();
-                
-                // Crear el elemento del mensaje
-                const messageContent = document.createElement('div');
-                
-                // Destacar mensajes propios
-                if (msg.remitente_id === currentUser.id) {
-                    messageContent.className = 'message-sent';
-                    messageContent.innerHTML = `${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
+                // Determinar si el mensaje es enviado o recibido
+                if (mensaje.emisor_id === currentUser.id) {
+                    messageDiv.className = 'message-sent';
                 } else {
-                   messageContent.className = 'message-received';
-                    messageContent.innerHTML = `${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
+                    messageDiv.className = 'message-received';
                 }
                 
-                messageDiv.appendChild(messageContent);
-                lista.appendChild(messageDiv);
+                // Añadir texto si hay
+                if (mensaje.texto && mensaje.texto.trim() !== '') {
+                    const textPara = document.createElement('p');
+                    textPara.textContent = mensaje.texto;
+                    messageDiv.appendChild(textPara);
+                }
+                
+                // Añadir imagen si hay
+                if (mensaje.imagen_url) {
+                    const img = document.createElement('img');
+                    img.src = mensaje.imagen_url;
+                    img.className = 'chat-image';
+                    img.alt = 'Imagen compartida';
+                    img.onclick = function() {
+                        abrirModalVerFoto(mensaje.imagen_url);
+                    };
+                    messageDiv.appendChild(img);
+                }
+                
+                // Añadir hora del mensaje
+                const timeSpan = document.createElement('div');
+                timeSpan.className = 'message-time';
+                
+                // Formatear fecha
+                const fecha = new Date(mensaje.enviado_en);
+                timeSpan.textContent = `${fecha.getHours().toString().padStart(2, '0')}:${fecha.getMinutes().toString().padStart(2, '0')}`;
+                
+                messageDiv.appendChild(timeSpan);
+                messageContainer.appendChild(messageDiv);
+                listaDiv.appendChild(messageContainer);
             });
             
-            // Scroll al final para ver los mensajes más recientes
-            lista.scrollTop = lista.scrollHeight;
+            // Hacer scroll hasta el último mensaje
+            listaDiv.scrollTop = listaDiv.scrollHeight;
+            
+            // Actualizar último tiempo verificado
+            lastMessageTime = new Date().toISOString();
         }
         
-        // Listar todos los mensajes (vista inicial)
-        function listarMensajes() {
-            const lista = document.getElementById('lista');
-            lista.innerHTML = '<p>Selecciona un usuario para comenzar a chatear</p>';
+        // Enviar mensaje de texto
+        async function enviarMensaje() {
+            if (!currentUser || !selectedUser) return;
+            
+            const textoInput = document.getElementById('texto');
+            const mensaje = textoInput.value.trim();
+            
+            if (!mensaje) {
+                alert('Escribe un mensaje');
+                return;
+            }
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('mensajes')
+                    .insert([
+                        {
+                            emisor_id: currentUser.id,
+                            destinatario_id: selectedUser.id,
+                            texto: mensaje
+                        }
+                    ]);
+                
+                if (error) {
+                    console.error('Error enviando mensaje:', error);
+                    alert('Error al enviar el mensaje');
+                    return;
+                }
+                
+                // Limpiar campo de texto
+                textoInput.value = '';
+                
+                // Actualizar vista de mensajes
+                listarMensajesConUsuario(selectedUser.id);
+            } catch (err) {
+                console.error('Error en enviarMensaje:', err);
+                alert('Ocurrió un error al enviar el mensaje');
+            }
         }
     </script>
 </body>
