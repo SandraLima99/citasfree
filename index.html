@@ -52,29 +52,37 @@
         <button type="submit">Iniciar sesión</button>
     </form>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script>
-        const usuarios = [
-            { alias: "lokotron", pin: "0000" },
-            { alias: "bonita58", pin: "0000" },
-            { alias: "lakixd", pin: "0000" },
-            { alias: "Thalya", pin: "0000" }
-        ];  // Aquí puedes agregar o simular usuarios desde una base de datos
+        // Configuración de Supabase
+        const supabaseUrl = 'https://aosshivxcxlypnsbvghc.supabase.co'; // Tu URL de Supabase
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvc3NoaXZ4Y3hseXBuc2J2Z2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzEyODEsImV4cCI6MjA2MDUwNzI4MX0.Vrs5L1Lbw7BwgagXB0Zy5SIrOFe9wBL2fKjBP6vdXtE'; // Tu clave pública de Supabase
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        function handleLogin(event) {
+        async function handleLogin(event) {
             event.preventDefault(); // Evitar el envío del formulario
 
             const alias = document.getElementById('alias').value;
             const pin = document.getElementById('pin').value;
 
-            // Verificación del usuario y pin
-            const usuario = usuarios.find(u => u.alias === alias);
+            // Verificar en la base de datos de Supabase
+            const { data, error } = await supabase
+                .from('usuarios')
+                .select('*')
+                .eq('alias', alias)
+                .eq('pin', pin)
+                .single();
 
-            if (usuario && usuario.pin === pin) {
-                localStorage.setItem('usuario', alias);  // Guardamos el alias en localStorage
-                window.location.href = 'usuarios.html';   // Redirigimos a la página de usuarios
-            } else {
-                alert('Alias o Pin incorrectos');
+            if (error) {
+                alert('Usuario o PIN incorrectos');
+                return;
             }
+
+            // Guardar alias en localStorage para mantener la sesión
+            localStorage.setItem('usuario', alias);
+
+            // Redirigir a la página de usuarios
+            window.location.href = 'usuarios.html';
         }
     </script>
 </body>
