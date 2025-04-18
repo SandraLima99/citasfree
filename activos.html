@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios Activos</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+    <h1>Usuarios Activos</h1>
+    
+    <div id="usuario-info"></div>
+    <button id="logout-button" style="display: none;">Cerrar sesión</button>
+
+    <h2>Usuarios en línea:</h2>
+    <div id="usuarios-lista"></div>
+
+    <script>
+        // Configurar tu conexión a Supabase
+        const supabaseUrl = 'https://your-project.supabase.co';  // Reemplaza con tu URL de Supabase
+        const supabaseKey = 'your-api-key'; // Reemplaza con tu clave API de Supabase
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Verificar si el usuario está logueado
+        function checkSession() {
+            const alias = localStorage.getItem('usuario');
+            if (alias) {
+                document.getElementById('usuario-info').innerHTML = `Bienvenido, ${alias}`;
+                document.getElementById('logout-button').style.display = 'block';
+                loadUsuariosActivos();
+            } else {
+                window.location.href = 'login.html';  // Redirige al login si no hay sesión
+            }
+        }
+
+        // Cargar usuarios activos
+        async function loadUsuariosActivos() {
+            const { data, error } = await supabase
+                .from('usuarios')
+                .select('alias, en_linea')
+                .eq('en_linea', true);  // Solo los usuarios que están activos
+
+            if (error) {
+                console.error('Error al cargar los usuarios:', error);
+                return;
+            }
+
+            let usuariosHTML = '';
+            data.forEach(usuario => {
+                usuariosHTML += `
+                    <div>
+                        <p>${usuario.alias} - ${usuario.en_linea ? 'Activo' : 'Inactivo'}</p>
+                        <button onclick="toggleEstado('${usuario.alias}')">
+                            ${usuario.en_linea ? 'Desactivar' : 'Activar'}
+                        </button>
+                    </div>
+                `;
+            });
+
+            document.getElementById('usuarios-lista').innerHTML = usuariosHTML;
+        }
+
+        // Alternar el estado de un usuario
+        async function toggleEstado(alias) {
+            const { data, error } = await supabase
+                .from('usuarios')
+                .update({ en_linea: false })  // Desactivar al usuario
+                .eq('alias', alias);
+
+            if (error) {
+                console.error('Error al cambiar el estado del usuario:', error);
+                return;
+            }
+
+            // Recargar la lista de usuarios activos
+            loadUsuariosActivos();
+        }
+
+        // Función para cerrar sesión
+        document.getElementById('logout-button').addEventListener('click', () => {
+            localStorage.removeItem('usuario');
+            window.location.href = 'login.html';  // Redirige al login al cerrar sesión
+        });
+
+        // Llamar a la función para verificar la sesión cuando cargue la página
+        checkSession();
+    </script>
+</body>
+</html>
