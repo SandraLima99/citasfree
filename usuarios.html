@@ -210,7 +210,7 @@
             // Configuración de Supabase
             const supabaseUrl = 'https://aosshivxcxlypnsbvghc.supabase.co';
             const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvc3NoaXZ4Y3hseXBuc2J2Z2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzEyODEsImV4cCI6MjA2MDUwNzI4MX0.Vrs5L1Lbw7BwgagXB0Zy5SIrOFe9wBL2fKjBP6vdXtE';
-            const client = supabase.createClient(supabaseUrl, supabaseKey);
+            const supabase = supabase.createClient(supabaseUrl, supabaseKey);
             
             // Variables para el chat
             let currentChatUser = null;
@@ -224,11 +224,12 @@
             }
             
             const usuario = JSON.parse(usuarioJSON);
+            console.log('Usuario actual:', usuario);
             
-            // Función para cargar usuarios (ahora todos aparecen en línea)
+            // Función para cargar usuarios
             async function cargarUsuarios() {
                 try {
-                    const { data, error } = await client
+                    const { data, error } = await supabase
                         .from('usuarios')
                         .select('*');
                     
@@ -239,6 +240,7 @@
                         return;
                     }
                     
+                    console.log('Usuarios cargados:', data);
                     const listaElement = document.getElementById('usuarios-lista');
                     
                     if (data && data.length > 0) {
@@ -306,16 +308,22 @@
                 }
             }
             
-            // Función para marcar al usuario como en línea (ahora simplificada)
+            // Función para marcar al usuario como en línea
             async function actualizarEstadoUsuario() {
                 try {
-                    await client
+                    const { error } = await supabase
                         .from('usuarios')
                         .update({ 
                             en_linea: true,
                             ultima_conexion: new Date().toISOString()
                         })
                         .eq('id', usuario.id);
+                        
+                    if (error) {
+                        console.error('Error al actualizar estado:', error);
+                    } else {
+                        console.log('Estado actualizado correctamente');
+                    }
                 } catch (err) {
                     console.error('Error al actualizar estado:', err);
                 }
@@ -323,6 +331,7 @@
             
             // Función para abrir el chat con un usuario
             function abrirChat(user) {
+                console.log('Abriendo chat con:', user);
                 const chatContainer = document.getElementById('chat-container');
                 const chatTitle = document.getElementById('chat-title');
                 const chatMessages = document.getElementById('chat-messages');
@@ -352,12 +361,13 @@
                 if (!currentChatUser) return;
                 
                 try {
-                    // Obtenemos mensajes donde el remitente o destinatario es el usuario actual
-                    const { data, error } = await client
+                    console.log('Cargando mensajes entre', usuario.id, 'y', currentChatUser.id);
+                    
+                    // Consulta para obtener mensajes enviados y recibidos entre los dos usuarios
+                    const { data, error } = await supabase
                         .from('mensajes')
                         .select('*')
                         .or(`remitente_id.eq.${usuario.id},destinatario_id.eq.${usuario.id}`)
-                        .or(`remitente_id.eq.${currentChatUser.id},destinatario_id.eq.${currentChatUser.id}`)
                         .order('created_at', { ascending: true });
                     
                     if (error) {
@@ -365,11 +375,15 @@
                         return;
                     }
                     
-                    // Filtrar solo mensajes entre el usuario actual y el usuario del chat
+                    console.log('Mensajes sin filtrar:', data);
+                    
+                    // Filtrar manualmente los mensajes entre estos dos usuarios específicos
                     const mensajesFiltrados = data.filter(msg => 
                         (msg.remitente_id === usuario.id && msg.destinatario_id === currentChatUser.id) ||
                         (msg.remitente_id === currentChatUser.id && msg.destinatario_id === usuario.id)
                     );
+                    
+                    console.log('Mensajes filtrados:', mensajesFiltrados);
                     
                     const chatMessages = document.getElementById('chat-messages');
                     chatMessages.innerHTML = '';
@@ -384,7 +398,7 @@
                     // Scroll al final
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 } catch (err) {
-                    console.error('Error inesperado:', err);
+                    console.error('Error inesperado al cargar mensajes:', err);
                 }
             }
             
@@ -398,20 +412,43 @@
                 if (!mensaje) return;
                 
                 try {
-                    await client
+                    console.log('Enviando mensaje:', {
+                        remitente_id: usuario.id,
+                        destinatario_id: currentChatUser.id,
+                        contenido: mensaje
+                    });
+                    
+                    const { data, error } = await supabase
                         .from('mensajes')
-                        .insert({
+                        .insert([{
                             remitente_id: usuario.id,
                             destinatario_id: currentChatUser.id,
                             contenido: mensaje,
                             created_at: new Date().toISOString()
-                        });
+                        }]);
+                    
+                    if (error) {
+                        console.error('Error al enviar mensaje:', error);
+                        return;
+                    }
+                    
+                    console.log('Mensaje enviado con éxito:', data);
                     
                     // Limpiar input
                     messageInput.value = '';
                     
-                    // Recargar mensajes
-                    cargarMensajes();
+                    // Añadir inmediatamente el mensaje al chat para mejor UX
+                    const chatMessages = document.getElementById('chat-messages');
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message message-sent';
+                    messageDiv.textContent = mensaje;
+                    chatMessages.appendChild(messageDiv);
+                    
+                    // Scroll al final
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    
+                    // Recargar mensajes para asegurarnos de tener todos
+                    setTimeout(cargarMensajes, 500);
                 } catch (err) {
                     console.error('Error al enviar mensaje:', err);
                 }
