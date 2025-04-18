@@ -2,7 +2,54 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - CitasFree</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #4a4a4a;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            padding: 12px;
+            background-color: #0275d8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0069d9;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <h1>Iniciar sesión</h1>
@@ -11,43 +58,69 @@
         <input type="password" id="pin" placeholder="PIN" required>
         <button type="submit">Entrar</button>
     </form>
-    <!-- Carga la librería de Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <div id="errorMessage" class="error">Alias o PIN incorrecto.</div>
+    <div id="loadingMessage" class="loading">Verificando credenciales...</div>
+
+    <!-- Cargar la versión específica de Supabase desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+    
     <script>
-        // Inicializar el cliente de Supabase correctamente
-        const supabaseUrl = 'https://aosshivxcxlypnsbvghc.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvc3NoaXZ4Y3hseXBuc2J2Z2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzEyODEsImV4cCI6MjA2MDUwNzI4MX0.Vrs5L1Lbw7BwgagXB0Zy5SIrOFe9wBL2fKjBP6vdXtE';
-        
-        // Usar correctamente la API global de Supabase
-        const { createClient } = supabase;
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        
-        // Código de login
-        const form = document.getElementById('loginForm');
-        form.onsubmit = async function(e) {
-            e.preventDefault();
-            const alias = document.getElementById('alias').value;
-            const pin = document.getElementById('pin').value;
+        // Esperar a que el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar el cliente de Supabase
+            const supabaseUrl = 'https://aosshivxcxlypnsbvghc.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvc3NoaXZ4Y3hseXBuc2J2Z2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzEyODEsImV4cCI6MjA2MDUwNzI4MX0.Vrs5L1Lbw7BwgagXB0Zy5SIrOFe9wBL2fKjBP6vdXtE';
             
-            try {
-                const { data, error } = await supabase
-                    .from('usuarios')
-                    .select('*')
-                    .eq('alias', alias)
-                    .eq('pin', pin)
-                    .single();
+            // Crear el cliente usando la función global de Supabase
+            const client = supabase.createClient(supabaseUrl, supabaseKey);
+            
+            // Elementos del DOM
+            const form = document.getElementById('loginForm');
+            const errorMsg = document.getElementById('errorMessage');
+            const loadingMsg = document.getElementById('loadingMessage');
+            
+            // Agregar el evento de envío del formulario
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
                 
-                if (error || !data) {
-                    alert('Alias o PIN incorrecto.');
-                } else {
-                    sessionStorage.setItem('usuario', JSON.stringify(data));
-                    window.location.href = 'usuarios.html';
+                // Ocultar mensaje de error previo y mostrar carga
+                errorMsg.style.display = 'none';
+                loadingMsg.style.display = 'block';
+                
+                const alias = document.getElementById('alias').value.trim();
+                const pin = document.getElementById('pin').value.trim();
+                
+                try {
+                    // Realizar la consulta a Supabase
+                    const { data, error } = await client
+                        .from('usuarios')
+                        .select('*')
+                        .eq('alias', alias)
+                        .eq('pin', pin)
+                        .single();
+                    
+                    // Ocultar mensaje de carga
+                    loadingMsg.style.display = 'none';
+                    
+                    if (error || !data) {
+                        // Mostrar mensaje de error
+                        errorMsg.style.display = 'block';
+                        console.error('Error de autenticación:', error);
+                    } else {
+                        // Guardar usuario en sessionStorage y redirigir
+                        console.log('Usuario autenticado:', data);
+                        sessionStorage.setItem('usuario', JSON.stringify(data));
+                        window.location.href = 'usuarios.html';
+                    }
+                } catch (err) {
+                    // Manejar cualquier otro error
+                    loadingMsg.style.display = 'none';
+                    errorMsg.textContent = 'Error al conectar con el servidor. Inténtalo más tarde.';
+                    errorMsg.style.display = 'block';
+                    console.error('Error en login:', err);
                 }
-            } catch (err) {
-                console.error('Error en login:', err);
-                alert('Error al iniciar sesión');
-            }
-        };
+            });
+        });
     </script>
 </body>
 </html>
