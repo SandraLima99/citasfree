@@ -64,6 +64,10 @@
             background-color: #9e9e9e;
             color: white;
         }
+        .away {
+            background-color: #ff9800;
+            color: white;
+        }
         .last-seen {
             font-size: 11px;
             color: #777;
@@ -96,6 +100,44 @@
         .active {
             background-color: #0b7dda;
         }
+        .user-active-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+            display: inline-block;
+        }
+        
+        /* Estilos responsivos para móviles */
+        @media (max-width: 500px) {
+            body {
+                padding: 10px;
+            }
+            
+            li {
+                padding: 8px 10px;
+                margin: 5px 0;
+            }
+            
+            .header {
+                flex-direction: column;
+                margin-bottom: 15px;
+            }
+            
+            .logout {
+                margin-top: 10px;
+            }
+            
+            .switch-view {
+                display: flex;
+                justify-content: center;
+            }
+            
+            .switch-btn {
+                padding: 6px 10px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -126,6 +168,12 @@
             // Estado de visualización
             let mostrarSoloEnLinea = false;
             
+            // Variables de detección de actividad
+            let tiempoInactivo = 0;
+            const TIEMPO_INACTIVO_LIMITE = 5; // minutos para considerar inactivo
+            let inactividadTimer;
+            let ultimaActividad = new Date();
+            
             // Verificar si el usuario está autenticado
             const usuarioJSON = sessionStorage.getItem('usuario');
             if (!usuarioJSON) {
@@ -135,7 +183,7 @@
             
             const usuario = JSON.parse(usuarioJSON);
             
-            // Formatear fecha
+            // Formatear fecha con mayor precisión
             function formatearFecha(fechaStr) {
                 if (!fechaStr) return 'Desconocido';
                 
@@ -146,11 +194,17 @@
                 
                 if (diferenciaMinutos < 1) {
                     return 'Ahora mismo';
+                } else if (diferenciaMinutos === 1) {
+                    return 'Hace 1 minuto';
                 } else if (diferenciaMinutos < 60) {
                     return `Hace ${diferenciaMinutos} minutos`;
+                } else if (diferenciaMinutos < 120) {
+                    return 'Hace 1 hora';
                 } else if (diferenciaMinutos < 24 * 60) {
                     const horas = Math.floor(diferenciaMinutos / 60);
                     return `Hace ${horas} horas`;
+                } else if (diferenciaMinutos < 48 * 60) {
+                    return 'Ayer';
                 } else {
                     const dia = fecha.getDate().toString().padStart(2, '0');
                     const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
@@ -161,13 +215,34 @@
                 }
             }
             
+            // Función para determinar si un usuario está realmente activo
+            function determinarEstadoActividad(user) {
+                if (!user.en_linea) return 'offline';
+                
+                if (user.id === usuario.id) return 'online'; // Siempre mostramos como online al usuario actual
+                
+                // Verificar si el usuario no ha interactuado por más de 5 minutos pero sigue conectado
+                if (user.ultima_actividad) {
+                    const ultimaAct = new Date(user.ultima_actividad);
+                    const ahora = new Date();
+                    const minutosSinActividad = Math.floor((ahora - ultimaAct) / (1000 * 60));
+                    
+                    if (minutosSinActividad > TIEMPO_INACTIVO_LIMITE) {
+                        return 'away';
+                    }
+                }
+                
+                return 'online';
+            }
+            
             // Función para cargar usuarios
             async function cargarUsuarios() {
                 try {
                     let query = client
                         .from('usuarios')
                         .select('*')
-                        .order('en_linea', { ascending: false });
+                        .order('en_linea', { ascending: false })
+                        .order('ultima_conexion', { ascending: false });
                     
                     if (mostrarSoloEnLinea) {
                         query = query.eq('en_linea', true);
@@ -205,18 +280,31 @@
                             }
                             userInfo.appendChild(userName);
                             
-                            // Última conexión para usuarios desconectados
-                            if (!user.en_linea) {
-                                const lastSeen = document.createElement('span');
-                                lastSeen.className = 'last-seen';
-                                lastSeen.textContent = `Última vez: ${formatearFecha(user.ultima_conexion)}`;
-                                userInfo.appendChild(lastSeen);
-                            }
+                            // Mostrar última vez para todos (conectados y desconectados)
+                            const lastSeen = document.createElement('span');
+                            lastSeen.className = 'last-seen';
                             
-                            // Estado de conexión
+                            // Si está en línea, mostrar cuánto tiempo lleva conectado
+                            if (user.en_linea) {
+                                lastSeen.textContent = `Conectado desde: ${formatearFecha(user.ultima_conexion)}`;
+                            } else {
+                                lastSeen.textContent = `Última vez: ${formatearFecha(user.ultima_conexion)}`;
+                            }
+                            userInfo.appendChild(lastSeen);
+                            
+                            // Estado de conexión con indicador visual de actividad
+                            const estadoActividad = determinarEstadoActividad(user);
+                            
                             const status = document.createElement('span');
-                            status.className = `status ${user.en_linea ? 'online' : 'offline'}`;
-                            status.textContent = user.en_linea ? 'En línea' : 'Desconectado';
+                            status.className = `status ${estadoActividad}`;
+                            
+                            if (estadoActividad === 'online') {
+                                status.textContent = 'En línea';
+                            } else if (estadoActividad === 'away') {
+                                status.textContent = 'Ausente';
+                            } else {
+                                status.textContent = 'Desconectado';
+                            }
                             
                             li.appendChild(userInfo);
                             li.appendChild(status);
@@ -238,6 +326,29 @@
                 }
             }
             
+            // Función para detectar actividad y actualizar estado
+            function detectarActividad() {
+                clearTimeout(inactividadTimer);
+                
+                // Actualizar la última actividad del usuario
+                ultimaActividad = new Date();
+                
+                // Actualizar en la base de datos cada cierto tiempo para no sobrecargar
+                actualizarUltimaActividad();
+                
+                // Reiniciar el contador de inactividad
+                tiempoInactivo = 0;
+                
+                // Configurar nuevo temporizador
+                inactividadTimer = setTimeout(function() {
+                    tiempoInactivo += 1;
+                    // Si supera el límite, marcar como ausente pero todavía conectado
+                    if (tiempoInactivo >= TIEMPO_INACTIVO_LIMITE) {
+                        console.log("Usuario inactivo por " + TIEMPO_INACTIVO_LIMITE + " minutos");
+                    }
+                }, 60000); // Verificar cada minuto
+            }
+            
             // Actualizar estado y hora de conexión del usuario
             async function actualizarEstadoUsuario(enLinea) {
                 try {
@@ -245,7 +356,8 @@
                         .from('usuarios')
                         .update({ 
                             en_linea: enLinea,
-                            ultima_conexion: new Date().toISOString()
+                            ultima_conexion: new Date().toISOString(),
+                            ultima_actividad: new Date().toISOString()
                         })
                         .eq('id', usuario.id);
                     
@@ -257,14 +369,45 @@
                 }
             }
             
+            // Función para actualizar solo la última actividad
+            async function actualizarUltimaActividad() {
+                try {
+                    const { error } = await client
+                        .from('usuarios')
+                        .update({ 
+                            ultima_actividad: new Date().toISOString()
+                        })
+                        .eq('id', usuario.id);
+                    
+                    if (error) {
+                        console.error('Error al actualizar última actividad:', error);
+                    }
+                } catch (err) {
+                    console.error('Error inesperado:', err);
+                }
+            }
+            
+            // Detectores de actividad del usuario
+            window.addEventListener('mousemove', detectarActividad);
+            window.addEventListener('keypress', detectarActividad);
+            window.addEventListener('click', detectarActividad);
+            window.addEventListener('scroll', detectarActividad);
+            window.addEventListener('touchstart', detectarActividad);
+            
             // Marcar usuario como en línea al cargar la página
             actualizarEstadoUsuario(true);
+            
+            // Iniciar detección de actividad
+            detectarActividad();
             
             // Cargar la lista de usuarios
             cargarUsuarios();
             
-            // Configurar temporizador para recargar usuarios cada 30 segundos
-            const intervalo = setInterval(cargarUsuarios, 30000);
+            // Configurar temporizador para recargar usuarios cada 20 segundos (más frecuente)
+            const intervalo = setInterval(cargarUsuarios, 20000);
+            
+            // Actualizar actividad cada 2 minutos sin importar si hay actividad visible
+            const intervaloActividad = setInterval(actualizarUltimaActividad, 120000);
             
             // Cambiar vista entre todos los usuarios y solo los conectados
             document.getElementById('all-users').addEventListener('click', function() {
@@ -292,6 +435,19 @@
                 window.location.href = 'index.html';
             });
             
+            // Verificar si el documento tiene foco para saber si el usuario está activo
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    // El usuario está viendo la página
+                    actualizarEstadoUsuario(true);
+                    detectarActividad();
+                } else {
+                    // El usuario cambió a otra pestaña/aplicación pero no cerró la página
+                    // No cambiamos el estado en_linea pero sí registramos la inactividad
+                    tiempoInactivo = TIEMPO_INACTIVO_LIMITE;
+                }
+            });
+            
             // Marcar usuario como fuera de línea al cerrar la página
             window.addEventListener('beforeunload', function() {
                 // Actualización síncrona para asegurar que se haga antes de cerrar
@@ -304,9 +460,11 @@
                 );
             });
             
-            // Limpiar intervalo al descargar la página
+            // Limpiar intervalos al descargar la página
             window.addEventListener('unload', function() {
                 clearInterval(intervalo);
+                clearInterval(intervaloActividad);
+                clearTimeout(inactividadTimer);
             });
         });
     </script>
