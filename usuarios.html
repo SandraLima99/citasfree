@@ -182,6 +182,7 @@
             }
             
             const usuario = JSON.parse(usuarioJSON);
+            console.log("Usuario actual:", usuario);
             
             // Formatear fecha con mayor precisión
             function formatearFecha(fechaStr) {
@@ -215,13 +216,19 @@
                 }
             }
             
-            // Función para determinar si un usuario está realmente activo
+            // Función para determinar si un usuario está realmente activo - CORREGIDA
             function determinarEstadoActividad(user) {
-                if (!user.en_linea) return 'offline';
+                // Siempre mostramos como online al usuario actual
+                if (user.id === usuario.id) {
+                    return 'online';
+                }
                 
-                if (user.id === usuario.id) return 'online'; // Siempre mostramos como online al usuario actual
+                // Si el usuario no está en línea, directamente es offline
+                if (user.en_linea === false) {
+                    return 'offline';
+                }
                 
-                // Verificar si el usuario no ha interactuado por más de 5 minutos pero sigue conectado
+                // Si el usuario está en línea, verificamos si está ausente
                 if (user.ultima_actividad) {
                     const ultimaAct = new Date(user.ultima_actividad);
                     const ahora = new Date();
@@ -235,18 +242,22 @@
                 return 'online';
             }
             
-            // Función para cargar usuarios
+            // Función para cargar usuarios - CORREGIDA
             async function cargarUsuarios() {
                 try {
+                    console.log("Cargando usuarios...");
+                    
                     let query = client
                         .from('usuarios')
-                        .select('*')
-                        .order('en_linea', { ascending: false })
-                        .order('ultima_conexion', { ascending: false });
+                        .select('*');
                     
                     if (mostrarSoloEnLinea) {
                         query = query.eq('en_linea', true);
                     }
+                    
+                    // Ordenar después de la consulta principal para evitar problemas
+                    query = query.order('en_linea', { ascending: false })
+                                 .order('ultima_conexion', { ascending: false });
                     
                     const { data, error } = await query;
                     
@@ -257,12 +268,16 @@
                         return;
                     }
                     
+                    console.log("Usuarios cargados:", data);
+                    
                     const listaElement = document.getElementById('usuarios-lista');
                     
                     if (data && data.length > 0) {
                         const ul = document.createElement('ul');
                         
                         data.forEach(user => {
+                            console.log(`Usuario ${user.alias}: en_linea=${user.en_linea}, id=${user.id}`);
+                            
                             const li = document.createElement('li');
                             
                             // Div para información del usuario
@@ -294,6 +309,7 @@
                             
                             // Estado de conexión con indicador visual de actividad
                             const estadoActividad = determinarEstadoActividad(user);
+                            console.log(`Estado de ${user.alias}: ${estadoActividad}`);
                             
                             const status = document.createElement('span');
                             status.className = `status ${estadoActividad}`;
@@ -349,38 +365,50 @@
                 }, 60000); // Verificar cada minuto
             }
             
-            // Actualizar estado y hora de conexión del usuario
+            // Actualizar estado y hora de conexión del usuario - CORREGIDA
             async function actualizarEstadoUsuario(enLinea) {
                 try {
-                    const { error } = await client
+                    const timestamp = new Date().toISOString();
+                    console.log(`Actualizando estado de usuario ${usuario.id} a ${enLinea ? 'en línea' : 'desconectado'}`);
+                    
+                    const { data, error } = await client
                         .from('usuarios')
                         .update({ 
                             en_linea: enLinea,
-                            ultima_conexion: new Date().toISOString(),
-                            ultima_actividad: new Date().toISOString()
+                            ultima_conexion: timestamp,
+                            ultima_actividad: timestamp
                         })
-                        .eq('id', usuario.id);
+                        .eq('id', usuario.id)
+                        .select();
                     
                     if (error) {
                         console.error('Error al actualizar estado:', error);
+                    } else {
+                        console.log('Estado actualizado correctamente:', data);
                     }
                 } catch (err) {
                     console.error('Error inesperado:', err);
                 }
             }
             
-            // Función para actualizar solo la última actividad
+            // Función para actualizar solo la última actividad - CORREGIDA
             async function actualizarUltimaActividad() {
                 try {
-                    const { error } = await client
+                    const timestamp = new Date().toISOString();
+                    
+                    const { data, error } = await client
                         .from('usuarios')
                         .update({ 
-                            ultima_actividad: new Date().toISOString()
+                            ultima_actividad: timestamp,
+                            en_linea: true // Aseguramos que el usuario esté marcado como en línea
                         })
-                        .eq('id', usuario.id);
+                        .eq('id', usuario.id)
+                        .select();
                     
                     if (error) {
                         console.error('Error al actualizar última actividad:', error);
+                    } else {
+                        console.log('Actividad actualizada correctamente:', data);
                     }
                 } catch (err) {
                     console.error('Error inesperado:', err);
@@ -403,8 +431,8 @@
             // Cargar la lista de usuarios
             cargarUsuarios();
             
-            // Configurar temporizador para recargar usuarios cada 20 segundos (más frecuente)
-            const intervalo = setInterval(cargarUsuarios, 20000);
+            // Configurar temporizador para recargar usuarios cada 15 segundos (más frecuente)
+            const intervalo = setInterval(cargarUsuarios, 15000);
             
             // Actualizar actividad cada 2 minutos sin importar si hay actividad visible
             const intervaloActividad = setInterval(actualizarUltimaActividad, 120000);
@@ -448,16 +476,19 @@
                 }
             });
             
-            // Marcar usuario como fuera de línea al cerrar la página
+            // Marcar usuario como fuera de línea al cerrar la página - CORREGIDA
             window.addEventListener('beforeunload', function() {
-                // Actualización síncrona para asegurar que se haga antes de cerrar
-                navigator.sendBeacon(
-                    `${supabaseUrl}/rest/v1/usuarios?id=eq.${usuario.id}`,
-                    JSON.stringify({
-                        en_linea: false,
-                        ultima_conexion: new Date().toISOString()
-                    })
-                );
+                // Usar Fetch API de forma síncrona en lugar de sendBeacon
+                const xhr = new XMLHttpRequest();
+                xhr.open('PATCH', `${supabaseUrl}/rest/v1/usuarios?id=eq.${usuario.id}`, false);
+                xhr.setRequestHeader('apikey', supabaseKey);
+                xhr.setRequestHeader('Authorization', `Bearer ${supabaseKey}`);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.setRequestHeader('Prefer', 'return=minimal');
+                xhr.send(JSON.stringify({
+                    en_linea: false,
+                    ultima_conexion: new Date().toISOString()
+                }));
             });
             
             // Limpiar intervalos al descargar la página
