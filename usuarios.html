@@ -34,6 +34,8 @@
             background-color: #4a0a0a;
             border-radius: 4px;
             transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
         }
         
         .user-item:hover {
@@ -65,6 +67,8 @@
             margin-bottom: 20px;
             border-radius: 5px;
             border: 1px solid #4a0a0a;
+            display: flex;
+            align-items: center;
         }
         
         .logout-btn {
@@ -153,18 +157,6 @@
             display: inline-block;
         }
         
-        /* Estilos para anuncios */
-        .ad-container {
-            width: 100%;
-            text-align: center;
-            margin: 20px 0;
-            clear: both;
-        }
-        
-        .ad-mobile {
-            display: none;
-        }
-        
         /* Estilos para salas VIP */
         .vip-rooms {
             display: flex;
@@ -221,19 +213,52 @@
             margin-left: 5px;
         }
         
-        /* Estilos responsivos para anuncios */
+        /* Estilos para fotos de perfil */
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+            border: 2px solid #ff3333;
+        }
+        
+        .current-user-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 2px solid #ff3333;
+        }
+        
+        .profile-pic-container {
+            position: relative;
+            margin-right: 15px;
+        }
+        
+        .change-pic-button {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background-color: #ff3333;
+            color: #1a0505;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        #profile-pic-upload {
+            display: none;
+        }
+        
+        /* Estilos responsivos */
         @media (max-width: 768px) {
-            .ad-desktop {
-                display: none;
-            }
-            
-            .ad-mobile {
-                display: block;
-                width: 100%;
-                overflow: hidden;
-                margin: 15px auto;
-            }
-            
             .chat-container .left-panel,
             .chat-container .right-panel {
                 width: 100% !important;
@@ -249,19 +274,6 @@
 </head>
 <body>
     <h1>Chat CitasFree <span class="hot-label">HOT</span></h1>
-    
-    <!-- Anuncio superior para escritorio -->
-    <div class="ad-container ad-desktop">
-        <script type="text/javascript">
-            atOptions = { 'key' : '8f88d057e1fda5f2cb45b6efe1cb51c4', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
-        </script>
-        <script type="text/javascript" src="//www.highperformanceformat.com/8f88d057e1fda5f2cb45b6efe1cb51c4/invoke.js"></script>
-    </div>
-    
-    <!-- Anuncio superior para móvil -->
-    <div class="ad-container ad-mobile">
-        <script type='text/javascript' src='//pl26408505.profitableratecpm.com/54/d4/33/54d43392e0a2c7ce4f5d866d24c24463.js'></script>
-    </div>
     
     <!-- Salas VIP -->
     <h2>Salas VIP Exclusivas</h2>
@@ -285,8 +297,15 @@
     
     <!-- Panel de usuario conectado -->
     <div id="user-panel" class="user-info">
-        <span><span class="status-indicator"></span> Conectado como: <strong id="current-user-name"></strong> (ID: <span id="current-user-id"></span>)</span>
-        <button class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
+        <div class="profile-pic-container">
+            <img id="current-user-pic" src="https://via.placeholder.com/50" alt="Tu foto" class="current-user-pic">
+            <div class="change-pic-button" onclick="document.getElementById('profile-pic-upload').click()">+</div>
+            <input type="file" id="profile-pic-upload" accept="image/*" onchange="actualizarFotoPerfil(this)">
+        </div>
+        <div>
+            <span><span class="status-indicator"></span> Conectado como: <strong id="current-user-name"></strong> (ID: <span id="current-user-id"></span>)</span>
+            <button class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
+        </div>
     </div>
     
     <!-- Panel de chat -->
@@ -313,20 +332,6 @@
             </div>
             <div style="clear: both;"></div>
         </div>
-    </div>
-    
-    <!-- Anuncio central para todos los dispositivos -->
-    <div class="ad-container">
-        <script type="text/javascript">
-            atOptions = { 'key' : '8f88d057e1fda5f2cb45b6efe1cb51c4', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
-        </script>
-        <script type="text/javascript" src="//www.highperformanceformat.com/8f88d057e1fda5f2cb45b6efe1cb51c4/invoke.js"></script>
-    </div>
-    
-    <!-- Segundo bloque de anuncios -->
-    <div class="ad-container">
-        <script async="async" data-cfasync="false" src="//pl26408509.profitableratecpm.com/83f6589a1f5518ac29be91871ea63adf/invoke.js"></script>
-        <div id="container-83f6589a1f5518ac29be91871ea63adf"></div>
     </div>
     
     <!-- Primero carga la librería de Supabase -->
@@ -395,6 +400,87 @@
         function mostrarInfoUsuario() {
             document.getElementById('current-user-name').textContent = currentUser.alias;
             document.getElementById('current-user-id').textContent = currentUser.id;
+            
+            // Mostrar foto de perfil si existe
+            if (currentUser.foto_perfil) {
+                document.getElementById('current-user-pic').src = currentUser.foto_perfil;
+            }
+        }
+        
+        // Actualizar foto de perfil
+        async function actualizarFotoPerfil(input) {
+            if (!currentUser) return;
+            
+            const file = input.files[0];
+            if (!file) return;
+            
+            // Validar tamaño (máximo 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('La imagen es demasiado grande. Máximo 2MB.');
+                return;
+            }
+            
+            // Validar tipo
+            if (!file.type.startsWith('image/')) {
+                alert('El archivo debe ser una imagen.');
+                return;
+            }
+            
+            try {
+                // Mostrar indicador de carga
+                document.getElementById('current-user-pic').src = 'https://via.placeholder.com/50/ff3333/ffffff?text=...';
+                
+                // Crear un nombre único para el archivo
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${currentUser.id}_${Date.now()}.${fileExt}`;
+                const filePath = `perfiles/${fileName}`;
+                
+                // Subir archivo a Supabase Storage
+                const { data, error } = await supabaseClient
+                    .storage
+                    .from('fotos_perfil')
+                    .upload(filePath, file);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                // Obtener URL pública del archivo
+                const { data: urlData } = await supabaseClient
+                    .storage
+                    .from('fotos_perfil')
+                    .getPublicUrl(filePath);
+                
+                const publicUrl = urlData.publicUrl;
+                
+                // Actualizar perfil del usuario
+                const { error: updateError } = await supabaseClient
+                    .from('usuarios')
+                    .update({ foto_perfil: publicUrl })
+                    .eq('id', currentUser.id);
+                
+                if (updateError) {
+                    throw updateError;
+                }
+                
+                // Actualizar la imagen mostrada
+                document.getElementById('current-user-pic').src = publicUrl;
+                
+                // Actualizar objeto de usuario actual
+                currentUser.foto_perfil = publicUrl;
+                
+                alert('Foto de perfil actualizada correctamente');
+            } catch (err) {
+                console.error('Error al actualizar foto de perfil:', err);
+                alert('Error al actualizar la foto de perfil: ' + err.message);
+                
+                // Restaurar imagen anterior
+                if (currentUser.foto_perfil) {
+                    document.getElementById('current-user-pic').src = currentUser.foto_perfil;
+                } else {
+                    document.getElementById('current-user-pic').src = 'https://via.placeholder.com/50';
+                }
+            }
         }
         
         // Iniciar actualización automática de mensajes
@@ -482,9 +568,27 @@
                 // Añadir a la lista visual
                 const userDiv = document.createElement('div');
                 userDiv.className = 'user-item';
-                userDiv.textContent = user.alias;
                 userDiv.dataset.userId = user.id;
                 userDiv.dataset.userAlias = user.alias;
+                
+                // Añadir imagen de perfil
+                const imgElement = document.createElement('img');
+                imgElement.className = 'profile-pic';
+                
+                // Usar foto de perfil si existe, o placeholder si no
+                if (user.foto_perfil) {
+                    imgElement.src = user.foto_perfil;
+                } else {
+                    imgElement.src = 'https://via.placeholder.com/40';
+                }
+                
+                imgElement.alt = user.alias;
+                userDiv.appendChild(imgElement);
+                
+                // Añadir nombre de usuario
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = user.alias;
+                userDiv.appendChild(nameSpan);
                 
                 // Añadir evento de clic para seleccionar usuario
                 userDiv.onclick = function() {
@@ -499,7 +603,8 @@
                     // Establecer usuario seleccionado
                     selectedUser = {
                         id: user.id,
-                        alias: user.alias
+                        alias: user.alias,
+                        foto_perfil: user.foto_perfil
                     };
                     
                     // Actualizar encabezado del chat
@@ -559,7 +664,7 @@
             // Obtener mensajes donde el usuario actual y el usuario seleccionado son remitentes o destinatarios
             let { data, error } = await supabaseClient
                 .from('mensajes')
-                .select('*, remitente:remitente_id(alias), destinatario:destinatario_id(alias)')
+                .select('*, remitente:remitente_id(alias, foto_perfil), destinatario:destinatario_id(alias, foto_perfil)')
                 .or(`and(remitente_id.eq.${currentUser.id},destinatario_id.eq.${userId}),and(remitente_id.eq.${userId},destinatario_id.eq.${currentUser.id})`)
                 .order('enviado_en', { ascending: true });
                 
@@ -581,9 +686,6 @@
                 messageDiv.className = 'message-container';
                 
                 const fechaFormateada = new Date(msg.enviado_en).toLocaleString();
-                
-                // Usar los alias en lugar de solo los IDs
-                const remitenteAlias = msg.remitente ? msg.remitente.alias : 'Usuario ' + msg.remitente_id;
                 
                 // Crear el elemento del mensaje
                 const messageContent = document.createElement('div');
@@ -612,7 +714,7 @@
             // Obtener mensajes donde el usuario actual es remitente o destinatario
             let { data, error } = await supabaseClient
                 .from('mensajes')
-                .select('*, remitente:remitente_id(alias), destinatario:destinatario_id(alias)')
+                .select('*, remitente:remitente_id(alias, foto_perfil), destinatario:destinatario_id(alias, foto_perfil)')
                 .or(`remitente_id.eq.${currentUser.id},destinatario_id.eq.${currentUser.id}`)
                 .order('enviado_en', { ascending: false })
                 .limit(20);
@@ -657,13 +759,5 @@
             });
         }
     </script>
-    
-    <!-- Anuncio inferior para todos los dispositivos -->
-    <div class="ad-container">
-        <script type="text/javascript">
-            atOptions = { 'key' : '8f88d057e1fda5f2cb45b6efe1cb51c4', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
-        </script>
-        <script type="text/javascript" src="//www.highperformanceformat.com/8f88d057e1fda5f2cb45b6efe1cb51c4/invoke.js"></script>
-    </div>
 </body>
 </html>
