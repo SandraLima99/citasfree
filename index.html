@@ -11,35 +11,38 @@
         <input type="password" id="pin" placeholder="PIN" required>
         <button type="submit">Entrar</button>
     </form>
-
-    <!-- Primero carga la librería de Supabase -->
+    <!-- Carga la librería de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-    <!-- Después tu configuración cliente -->
-    <script src="supabaseClient.js"></script>
-
-    <!-- Luego ya tu código de login -->
     <script>
+        // Inicializar el cliente de Supabase
+        const supabaseUrl = 'https://aosshivxcxlypnsbvghc.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvc3NoaXZ4Y3hseXBuc2J2Z2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzEyODEsImV4cCI6MjA2MDUwNzI4MX0.Vrs5L1Lbw7BwgagXB0Zy5SIrOFe9wBL2fKjBP6vdXtE';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Código de login
         const form = document.getElementById('loginForm');
-
         form.onsubmit = async function(e) {
             e.preventDefault();
-
             const alias = document.getElementById('alias').value;
             const pin = document.getElementById('pin').value;
-
-            const { data, error } = await supabase
-                .from('usuarios')
-                .select('*')
-                .eq('alias', alias)
-                .eq('pin', pin)
-                .single();
-
-            if (error || !data) {
-                alert('Alias o PIN incorrecto.');
-            } else {
-                sessionStorage.setItem('usuario', JSON.stringify(data));
-                window.location.href = 'usuarios.html';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .eq('alias', alias)
+                    .eq('pin', pin)
+                    .single();
+                
+                if (error || !data) {
+                    alert('Alias o PIN incorrecto.');
+                } else {
+                    sessionStorage.setItem('usuario', JSON.stringify(data));
+                    window.location.href = 'usuarios.html';
+                }
+            } catch (err) {
+                console.error('Error en login:', err);
+                alert('Error al iniciar sesión');
             }
         };
     </script>
