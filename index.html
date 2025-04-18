@@ -3,99 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat de Supabase</title>
+    <title>Login - Chat de Supabase</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 1000px;
+            max-width: 600px;
             margin: 0 auto;
             padding: 20px;
             background-color: #1e1e2e;
             color: #cdd6f4;
         }
         
-        h1, h2 {
+        h1, h2, h3 {
             color: #89b4fa;
-        }
-        
-        .user-list {
-            margin-top: 20px;
-            border: 1px solid #45475a;
-            padding: 10px;
-            background-color: #313244;
-            border-radius: 5px;
-        }
-        
-        .user-item {
-            cursor: pointer;
-            padding: 8px;
-            margin: 4px 0;
-            background-color: #45475a;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-            display: flex;
-            align-items: center;
-        }
-        
-        .user-item:hover {
-            background-color: #585b70;
-        }
-        
-        .user-item.active {
-            background-color: #89b4fa;
-            color: #1e1e2e;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #585b70;
-            margin-right: 10px;
-            object-fit: cover;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .message-box {
-            border: 1px solid #45475a;
-            padding: 10px;
-            margin-top: 10px;
-            max-height: 400px;
-            overflow-y: auto;
-            background-color: #313244;
-            border-radius: 5px;
-        }
-        
-        .user-info {
-            background-color: #313244;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            border: 1px solid #45475a;
-            display: flex;
-            align-items: center;
-        }
-        
-        .user-profile-pic {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            margin-right: 15px;
-            object-fit: cover;
-        }
-        
-        .logout-btn {
-            margin-left: 10px;
-            cursor: pointer;
-            background-color: #f38ba8;
-            color: #1e1e2e;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            font-weight: bold;
+            text-align: center;
         }
         
         input, button, select {
@@ -105,6 +26,8 @@
             color: #cdd6f4;
             border: 1px solid #585b70;
             border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         button {
@@ -113,77 +36,23 @@
             border: none;
             cursor: pointer;
             font-weight: bold;
+            margin-top: 10px;
         }
         
         button:hover {
             background-color: #74c7ec;
         }
         
-        .message-container {
-            display: flex;
-            margin-bottom: 10px;
+        .hidden {
+            display: none;
         }
         
-        .message-sent {
-            background-color: #89b4fa;
-            color: #1e1e2e;
-            padding: 8px 12px;
+        .auth-container {
+            background-color: #313244;
+            padding: 20px;
             border-radius: 8px;
-            margin-left: auto;
-            max-width: 80%;
-        }
-        
-        .message-received {
-            background-color: #45475a;
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin-right: auto;
-            max-width: 80%;
-        }
-        
-        .message-time {
-            font-size: 0.8em;
-            opacity: 0.8;
-            margin-top: 4px;
-        }
-        
-        .message-input-container {
-            display: flex;
-            margin-top: 10px;
-        }
-        
-        .message-input {
-            flex-grow: 1;
-            margin-right: 10px;
-        }
-        
-        #chat-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        
-        .status-indicator {
-            height: 10px;
-            width: 10px;
-            border-radius: 50%;
-            background-color: #a6e3a1;
-            margin-right: 5px;
-            display: inline-block;
-        }
-        
-        /* Estilos para anuncios */
-        .ad-container {
-            width: 100%;
-            text-align: center;
-            margin: 20px 0;
-            clear: both;
-        }
-        
-        .profile-section {
+            border: 1px solid #45475a;
             margin-top: 20px;
-            margin-bottom: 20px;
         }
         
         .profile-picture-container {
@@ -206,6 +75,8 @@
             position: relative;
             overflow: hidden;
             display: inline-block;
+            width: 100%;
+            text-align: center;
         }
         
         .file-input-container input[type=file] {
@@ -225,43 +96,44 @@
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
+            width: 80%;
         }
         
-        /* Estilos responsivos para anuncios */
-        @media (max-width: 768px) {
-            .chat-container .left-panel,
-            .chat-container .right-panel {
-                width: 100% !important;
-                float: none !important;
-                margin-right: 0 !important;
-            }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+        
+        .ad-container {
+            width: 100%;
+            text-align: center;
+            margin: 20px 0;
+            clear: both;
         }
     </style>
 </head>
 <body>
     <h1>Chat de Supabase</h1>
     
-    <!-- Panel de usuario conectado -->
-    <div id="user-panel" class="hidden user-info">
-        <img id="current-user-avatar" src="/api/placeholder/50/50" alt="Avatar" class="user-profile-pic">
-        <div>
-            <span><span class="status-indicator"></span> Conectado como: <strong id="current-user-name"></strong></span>
-            <button class="logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
-        </div>
-    </div>
-    
-    <!-- Panel de registro/login -->
-    <div id="auth-panel">
-        <h2>Iniciar sesión / Registrarse</h2>
-        <div>
+    <!-- Panel de autenticación -->
+    <div class="auth-container">
+        <div id="login-panel">
+            <h2>Iniciar sesión</h2>
             <input type="text" id="login-alias" placeholder="Ingresa tu alias">
-            <button onclick="iniciarSesion()">Iniciar Sesión</button>
-            <button onclick="mostrarRegistro()">Registrarse</button>
+            <div class="button-group">
+                <button onclick="iniciarSesion()">Iniciar Sesión</button>
+                <button onclick="mostrarRegistro()">Registrarse</button>
+            </div>
         </div>
         
         <!-- Formulario de registro con foto de perfil -->
-        <div id="registro-panel" class="hidden profile-section">
-            <h3>Completa tu perfil</h3>
+        <div id="registro-panel" class="hidden">
+            <h2>Crear cuenta</h2>
             
             <div class="profile-picture-container">
                 <img id="preview-avatar" src="/api/placeholder/100/100" alt="Avatar Preview" class="profile-picture-preview">
@@ -272,34 +144,10 @@
             </div>
             
             <input type="text" id="registro-alias" placeholder="Ingresa tu alias">
-            <button onclick="registrarUsuario()">Crear Cuenta</button>
-            <button onclick="volverLogin()">Volver</button>
-        </div>
-    </div>
-    
-    <!-- Panel de chat (visible solo cuando está conectado) -->
-    <div id="chat-panel" class="hidden">
-        <div class="chat-container">
-            <div class="left-panel" style="width: 30%; float: left; margin-right: 2%;">
-                <h2>Usuarios</h2>
-                <div id="user-list" class="user-list">
-                    <!-- Aquí se mostrarán los usuarios -->
-                </div>
+            <div class="button-group">
+                <button onclick="registrarUsuario()">Crear Cuenta</button>
+                <button onclick="volverLogin()">Volver</button>
             </div>
-            
-            <div class="right-panel" style="width: 68%; float: left;">
-                <div id="chat-header">
-                    <h2>Mensajes con: <span id="chat-with">Nadie seleccionado</span></h2>
-                </div>
-                
-                <div id="lista" class="message-box"></div>
-                
-                <div class="message-input-container">
-                    <input type="text" id="texto" class="message-input" placeholder="Escribe tu mensaje" disabled>
-                    <button id="send-button" onclick="enviarMensaje()" disabled>Enviar</button>
-                </div>
-            </div>
-            <div style="clear: both;"></div>
         </div>
     </div>
     
@@ -321,37 +169,39 @@
         // Usar createClient desde el objeto global importado
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
         
-        // Variables para el usuario actual
-        let currentUser = null;
-        let selectedUser = null;
-        let messageCheckInterval = null;
-        let lastMessageTime = new Date().toISOString();
-        let imageBase64 = null; // Para almacenar la imagen en base64
+        // Variable para almacenar la imagen en base64
+        let imageBase64 = null;
         
-        // Cargar sesión al iniciar la página
+        // Verificar si ya hay sesión al cargar la página
         window.onload = async function() {
-            await cargarSesion();
-            await cargarUsuarios();
+            const userId = localStorage.getItem('userId');
+            const userAlias = localStorage.getItem('userAlias');
             
-            // Prevenir envío de formulario al presionar Enter en el campo de texto
-            document.getElementById('texto').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    enviarMensaje();
+            if (userId && userAlias) {
+                // Verificar que el usuario sigue existiendo en la base de datos
+                const { data, error } = await supabaseClient
+                    .from('usuarios')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+                
+                if (data && !error) {
+                    // Si hay sesión, redirigir al chat
+                    window.location.href = 'chat.html';
                 }
-            });
+            }
         };
         
         // Mostrar panel de registro
         function mostrarRegistro() {
-            document.getElementById('auth-panel').querySelector('div').classList.add('hidden');
+            document.getElementById('login-panel').classList.add('hidden');
             document.getElementById('registro-panel').classList.remove('hidden');
             document.getElementById('registro-alias').value = document.getElementById('login-alias').value;
         }
         
         // Volver al panel de login
         function volverLogin() {
-            document.getElementById('auth-panel').querySelector('div').classList.remove('hidden');
+            document.getElementById('login-panel').classList.remove('hidden');
             document.getElementById('registro-panel').classList.add('hidden');
         }
         
@@ -366,124 +216,6 @@
                 };
                 reader.readAsDataURL(file);
             }
-        }
-        
-        // Función para cargar la sesión del usuario desde localStorage
-        async function cargarSesion() {
-            const userId = localStorage.getItem('userId');
-            const userAlias = localStorage.getItem('userAlias');
-            const userAvatar = localStorage.getItem('userAvatar');
-            
-            if (userId && userAlias) {
-                // Verificar que el usuario sigue existiendo en la base de datos
-                const { data, error } = await supabaseClient
-                    .from('usuarios')
-                    .select('*')
-                    .eq('id', userId)
-                    .single();
-                
-                if (data && !error) {
-                    // Establecer sesión
-                    currentUser = data;
-                    mostrarPanelUsuario();
-                    
-                    // Cargar avatar si existe
-                    if (userAvatar) {
-                        document.getElementById('current-user-avatar').src = userAvatar;
-                    }
-                    
-                    // Iniciar verificación automática de mensajes nuevos
-                    iniciarActualizacionAutomatica();
-                } else {
-                    // Si el usuario no existe, limpiar localStorage
-                    localStorage.removeItem('userId');
-                    localStorage.removeItem('userAlias');
-                    localStorage.removeItem('userAvatar');
-                    ocultarPanelUsuario();
-                }
-            } else {
-                ocultarPanelUsuario();
-            }
-        }
-        
-        // Iniciar actualización automática de mensajes
-        function iniciarActualizacionAutomatica() {
-            // Detener cualquier intervalo existente
-            if (messageCheckInterval) {
-                clearInterval(messageCheckInterval);
-            }
-            
-            // Comprobar mensajes nuevos cada 5 segundos
-            messageCheckInterval = setInterval(function() {
-                verificarMensajesNuevos();
-            }, 5000);
-        }
-        
-        // Verificar mensajes nuevos
-        async function verificarMensajesNuevos() {
-            if (!currentUser) return;
-            
-            // Buscar mensajes más recientes que el último verificado
-            const { data, error } = await supabaseClient
-                .from('mensajes')
-                .select('*')
-                .eq('destinatario_id', currentUser.id)
-                .gt('enviado_en', lastMessageTime)
-                .order('enviado_en', { ascending: false });
-            
-            if (error) {
-                console.error('Error verificando mensajes nuevos:', error);
-                return;
-            }
-            
-            // Si hay mensajes nuevos, actualizar la vista
-            if (data && data.length > 0) {
-                // Actualizar el tiempo del último mensaje
-                lastMessageTime = new Date().toISOString();
-                
-                // Actualizar mensajes si hay un usuario seleccionado
-                if (selectedUser) {
-                    listarMensajesConUsuario(selectedUser.id);
-                } else {
-                    listarMensajes();
-                }
-                
-                // También actualizar la lista de usuarios para reflejar cambios
-                cargarUsuarios();
-            }
-        }
-        
-        // Mostrar panel de usuario y ocultar panel de autenticación
-        function mostrarPanelUsuario() {
-            document.getElementById('user-panel').classList.remove('hidden');
-            document.getElementById('chat-panel').classList.remove('hidden');
-            document.getElementById('auth-panel').classList.add('hidden');
-            
-            document.getElementById('current-user-name').textContent = currentUser.alias;
-        }
-        
-        // Ocultar panel de usuario y mostrar panel de autenticación
-        function ocultarPanelUsuario() {
-            document.getElementById('user-panel').classList.add('hidden');
-            document.getElementById('chat-panel').classList.add('hidden');
-            document.getElementById('auth-panel').classList.remove('hidden');
-            document.getElementById('auth-panel').querySelector('div').classList.remove('hidden');
-            document.getElementById('registro-panel').classList.add('hidden');
-            currentUser = null;
-            
-            // Detener la actualización automática
-            if (messageCheckInterval) {
-                clearInterval(messageCheckInterval);
-                messageCheckInterval = null;
-            }
-        }
-        
-        // Cerrar sesión
-        function cerrarSesion() {
-            localStorage.removeItem('userId');
-            localStorage.removeItem('userAlias');
-            localStorage.removeItem('userAvatar');
-            ocultarPanelUsuario();
         }
         
         // Iniciar sesión con alias existente
@@ -519,18 +251,12 @@
             // Si tiene avatar, guardarlo también
             if (data.avatar) {
                 localStorage.setItem('userAvatar', data.avatar);
-                document.getElementById('current-user-avatar').src = data.avatar;
             }
             
-            currentUser = data;
-            
             alert('¡Sesión iniciada correctamente!');
-            mostrarPanelUsuario();
-            cargarUsuarios();
-            listarMensajes();
             
-            // Iniciar verificación automática de mensajes
-            iniciarActualizacionAutomatica();
+            // Redirigir a la página de chat
+            window.location.href = 'chat.html';
         }
         
         // Registrar nuevo usuario
@@ -578,230 +304,11 @@
                     localStorage.setItem('userAvatar', imageBase64);
                 }
                 
-                currentUser = data[0];
-                
                 alert('¡Usuario registrado con éxito!');
-                mostrarPanelUsuario();
-                cargarUsuarios();
                 
-                // Iniciar verificación automática de mensajes
-                iniciarActualizacionAutomatica();
+                // Redirigir a la página de chat
+                window.location.href = 'chat.html';
             }
-        }
-        
-        // Cargar lista de usuarios
-        async function cargarUsuarios() {
-            const { data, error } = await supabaseClient
-                .from('usuarios')
-                .select('*')
-                .order('alias');
-                
-            if (error) {
-                console.error('Error cargando usuarios:', error);
-                return;
-            }
-            
-            const userListDiv = document.getElementById('user-list');
-            
-            // Limpiar lista
-            userListDiv.innerHTML = '';
-            
-            if (data.length === 0) {
-                userListDiv.innerHTML = '<p>No hay usuarios registrados</p>';
-                return;
-            }
-            
-            data.forEach(user => {
-                // No mostrar al usuario actual en la lista
-                if (currentUser && user.id === currentUser.id) return;
-                
-                // Añadir a la lista visual
-                const userDiv = document.createElement('div');
-                userDiv.className = 'user-item';
-                userDiv.dataset.userId = user.id;
-                userDiv.dataset.userAlias = user.alias;
-                
-                // Añadir avatar del usuario
-                const avatarImg = document.createElement('img');
-                avatarImg.className = 'user-avatar';
-                avatarImg.src = user.avatar || '/api/placeholder/40/40';
-                avatarImg.alt = user.alias;
-                userDiv.appendChild(avatarImg);
-                
-                // Añadir nombre del usuario
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = user.alias;
-                userDiv.appendChild(nameSpan);
-                
-                // Añadir evento de clic para seleccionar usuario
-                userDiv.onclick = function() {
-                    // Eliminar selección anterior
-                    document.querySelectorAll('.user-item').forEach(item => {
-                        item.classList.remove('active');
-                    });
-                    
-                    // Añadir selección a este usuario
-                    userDiv.classList.add('active');
-                    
-                    // Establecer usuario seleccionado
-                    selectedUser = {
-                        id: user.id,
-                        alias: user.alias
-                    };
-                    
-                    // Actualizar encabezado del chat
-                    document.getElementById('chat-with').textContent = user.alias;
-                    
-                    // Habilitar entrada de texto y botón de enviar
-                    document.getElementById('texto').disabled = false;
-                    document.getElementById('send-button').disabled = false;
-                    
-                    // Cargar mensajes con este usuario
-                    listarMensajesConUsuario(user.id);
-                };
-                
-                userListDiv.appendChild(userDiv);
-            });
-        }
-        
-        // Enviar mensaje
-        async function enviarMensaje() {
-            if (!currentUser) {
-                alert('Debes iniciar sesión para enviar mensajes');
-                return;
-            }
-            
-            if (!selectedUser) {
-                alert('Por favor selecciona un usuario para enviar un mensaje');
-                return;
-            }
-            
-            const texto = document.getElementById('texto').value;
-            
-            if (!texto) {
-                alert('Por favor escribe un mensaje');
-                return;
-            }
-            
-            let { data, error } = await supabaseClient.from('mensajes').insert([
-                { remitente_id: currentUser.id, destinatario_id: selectedUser.id, mensaje: texto }
-            ]);
-            
-            if (error) {
-                alert('Error: ' + error.message);
-                console.error(error);
-            } else {
-                document.getElementById('texto').value = '';
-                listarMensajesConUsuario(selectedUser.id);
-                
-                // Actualizar el tiempo del último mensaje
-                lastMessageTime = new Date().toISOString();
-            }
-        }
-        
-        // Listar mensajes con un usuario específico
-        async function listarMensajesConUsuario(userId) {
-            if (!currentUser) return;
-            
-            // Obtener mensajes donde el usuario actual y el usuario seleccionado son remitentes o destinatarios
-            let { data, error } = await supabaseClient
-                .from('mensajes')
-                .select('*, remitente:remitente_id(alias), destinatario:destinatario_id(alias)')
-                .or(`and(remitente_id.eq.${currentUser.id},destinatario_id.eq.${userId}),and(remitente_id.eq.${userId},destinatario_id.eq.${currentUser.id})`)
-                .order('enviado_en', { ascending: true });
-                
-            const lista = document.getElementById('lista');
-            lista.innerHTML = '';
-            
-            if (error) {
-                console.error('Error cargando mensajes:', error);
-                return;
-            }
-            
-            if (data.length === 0) {
-                lista.innerHTML = '<p>No hay mensajes con este usuario</p>';
-                return;
-            }
-            
-            data.forEach(msg => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message-container';
-                
-                const fechaFormateada = new Date(msg.enviado_en).toLocaleString();
-                
-                // Usar los alias en lugar de solo los IDs
-                const remitenteAlias = msg.remitente ? msg.remitente.alias : 'Usuario ' + msg.remitente_id;
-                
-                // Crear el elemento del mensaje
-                const messageContent = document.createElement('div');
-                
-                // Destacar mensajes propios
-                if (msg.remitente_id === currentUser.id) {
-                    messageContent.className = 'message-sent';
-                    messageContent.innerHTML = `${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
-                } else {
-                    messageContent.className = 'message-received';
-                    messageContent.innerHTML = `${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
-                }
-                
-                messageDiv.appendChild(messageContent);
-                lista.appendChild(messageDiv);
-            });
-            
-            // Desplazar al final para ver los mensajes más recientes
-            lista.scrollTop = lista.scrollHeight;
-        }
-        
-        // Listar todos los mensajes (para la vista inicial)
-        async function listarMensajes() {
-            if (!currentUser) return;
-            
-            // Obtener mensajes donde el usuario actual es remitente o destinatario
-            let { data, error } = await supabaseClient
-                .from('mensajes')
-                .select('*, remitente:remitente_id(alias), destinatario:destinatario_id(alias)')
-                .or(`remitente_id.eq.${currentUser.id},destinatario_id.eq.${currentUser.id}`)
-                .order('enviado_en', { ascending: false })
-                .limit(20);
-                
-            const lista = document.getElementById('lista');
-            lista.innerHTML = '';
-            
-            if (error) {
-                console.error('Error cargando mensajes:', error);
-                return;
-            }
-            
-            if (data.length === 0) {
-                lista.innerHTML = '<p>No hay mensajes</p>';
-                return;
-            }
-            
-            data.forEach(msg => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message-container';
-                
-                const fechaFormateada = new Date(msg.enviado_en).toLocaleString();
-                
-                // Usar los alias en lugar de solo los IDs
-                const remitenteAlias = msg.remitente ? msg.remitente.alias : 'Usuario ' + msg.remitente_id;
-                const destinatarioAlias = msg.destinatario ? msg.destinatario.alias : 'Usuario ' + msg.destinatario_id;
-                
-                // Crear el elemento del mensaje
-                const messageContent = document.createElement('div');
-                
-                // Destacar mensajes propios
-                if (msg.remitente_id === currentUser.id) {
-                    messageContent.className = 'message-sent';
-                    messageContent.innerHTML = `<strong>Tú → ${destinatarioAlias}</strong>: ${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
-                } else {
-                    messageContent.className = 'message-received';
-                    messageContent.innerHTML = `<strong>${remitenteAlias} → Tú</strong>: ${msg.mensaje}<div class="message-time">${fechaFormateada}</div>`;
-                }
-                
-                messageDiv.appendChild(messageContent);
-                lista.appendChild(messageDiv);
-            });
         }
     </script>
 </body>
