@@ -226,7 +226,8 @@
                             const esEnviado = mensaje.remitente_id === usuario.id;
                             const messageDiv = document.createElement('div');
                             messageDiv.className = esEnviado ? 'message-sent' : 'message-received';
-                            messageDiv.textContent = `${esEnviado ? 'Tú: ' : currentChatUser.alias + ': '}${mensaje.contenido}`;
+                            // Usar mensaje.mensaje en lugar de mensaje.contenido
+                            messageDiv.textContent = `${esEnviado ? 'Tú: ' : currentChatUser.alias + ': '}${mensaje.mensaje}`;
                             chatMessages.appendChild(messageDiv);
                         });
                     } else {
@@ -256,7 +257,7 @@
                     console.log('Enviando mensaje:', {
                         remitente_id: usuario.id,
                         destinatario_id: currentChatUser.id,
-                        contenido: mensaje,
+                        mensaje: mensaje,  // Cambiado de contenido a mensaje
                         created_at: ahora
                     });
                     
@@ -265,7 +266,7 @@
                         .insert([{
                             remitente_id: usuario.id,
                             destinatario_id: currentChatUser.id,
-                            contenido: mensaje,
+                            mensaje: mensaje,  // Cambiado de contenido a mensaje
                             created_at: ahora
                         }]);
                     
