@@ -2,68 +2,80 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Login con ID y PIN</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión</title>
     <style>
-        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f4f4; }
-        form { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        input { display: block; margin: 10px 0; padding: 10px; width: 100%; }
-        button { padding: 10px; width: 100%; background: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #0056b3; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            margin: auto;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
+    <h1 style="text-align: center;">Iniciar sesión</h1>
+    <form id="login-form" onsubmit="handleLogin(event)">
+        <label for="alias">Alias:</label>
+        <input type="text" id="alias" name="alias" required>
+        
+        <label for="pin">Pin:</label>
+        <input type="password" id="pin" name="pin" required>
+        
+        <button type="submit">Iniciar sesión</button>
+    </form>
 
-<form id="login-form">
-    <h2>Entrar al sistema</h2>
-    <input type="text" id="usuario" placeholder="Tu ID de usuario (ej: lokotron)" required>
-    <input type="password" id="pin" placeholder="PIN de seguridad" maxlength="4" required>
-    <button type="submit">Ingresar</button>
-</form>
+    <script>
+        const usuarios = [
+            { alias: "lokotron", pin: "0000" },
+            { alias: "bonita58", pin: "0000" },
+            { alias: "lakixd", pin: "0000" },
+            { alias: "Thalya", pin: "0000" }
+        ];  // Aquí puedes agregar o simular usuarios desde una base de datos
 
-<script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+        function handleLogin(event) {
+            event.preventDefault(); // Evitar el envío del formulario
 
-    const supabaseUrl = 'https://aosshivxcxlypnsbvghc.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvc3NoaXZ4Y3hseXBuc2J2Z2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzEyODEsImV4cCI6MjA2MDUwNzI4MX0.Vrs5L1Lbw7BwgagXB0Zy5SIrOFe9wBL2fKjBP6vdXtE';
-    const supabase = createClient(supabaseUrl, supabaseKey);
+            const alias = document.getElementById('alias').value;
+            const pin = document.getElementById('pin').value;
 
-    // Si ya hay sesión, redirigir directo
-    if (localStorage.getItem('usuario')) {
-        window.location.href = 'pagina-principal.html';  // Cambia esto a la URL que quieras
-    }
+            // Verificación del usuario y pin
+            const usuario = usuarios.find(u => u.alias === alias);
 
-    const form = document.getElementById('login-form');
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const usuario = document.getElementById('usuario').value.trim();
-        const pin = document.getElementById('pin').value.trim();
-
-        const { data, error } = await supabase
-            .from('usuarios')
-            .select('pin')
-            .eq('alias', usuario)
-            .single();
-
-        if (error || !data) {
-            alert('Usuario no encontrado.');
-            return;
+            if (usuario && usuario.pin === pin) {
+                localStorage.setItem('usuario', alias);  // Guardamos el alias en localStorage
+                window.location.href = 'usuarios.html';   // Redirigimos a la página de usuarios
+            } else {
+                alert('Alias o Pin incorrectos');
+            }
         }
-
-        if (data.pin !== pin) {
-            alert('PIN incorrecto.');
-            return;
-        }
-
-        // Guardar sesión
-        localStorage.setItem('usuario', usuario);
-        alert('¡Bienvenido, ' + usuario + '!');
-
-        // Redirige a otra página
-        window.location.href = 'pagina-principal.html';  // Cambia a la URL que quieras.
-    });
-</script>
-
+    </script>
 </body>
 </html>
