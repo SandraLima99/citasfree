@@ -52,9 +52,10 @@
         <button type="submit">Iniciar sesión</button>
     </form>
 
+    <!-- Primero carga el script de Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script>
-        // Configuración de Supabase
+        // Asegurarse de que supabase esté inicializado antes de usarlo
         const supabaseUrl = 'https://aosshivxcxlypnsbvghc.supabase.co'; // Tu URL de Supabase
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvc3NoaXZ4Y3hseXBuc2J2Z2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzEyODEsImV4cCI6MjA2MDUwNzI4MX0.Vrs5L1Lbw7BwgagXB0Zy5SIrOFe9wBL2fKjBP6vdXtE'; // Tu clave pública de Supabase
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
