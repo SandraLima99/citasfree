@@ -3,73 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - CitasFree</title>
+    <title>Chat CitasFree - Login</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
             background-color: #1a0505;
-            color: #ffffff;
+            color: #ffcccc;
         }
-        h1 {
-            text-align: center;
+        
+        h1, h2 {
             color: #ff3333;
-            text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.3);
+            text-align: center;
         }
+        
         .login-container {
+            max-width: 400px;
+            margin: 0 auto;
             background-color: #2a0808;
+            padding: 30px;
             border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+            border: 1px solid #4a0a0a;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
         }
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+        
+        .form-group {
+            margin-bottom: 20px;
         }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
         input {
+            width: 100%;
             padding: 12px;
-            border: 1px solid #ff6666;
-            background-color: #3a0a0a;
-            color: white;
+            background-color: #4a0a0a;
+            color: #ffcccc;
+            border: 1px solid #5a0a0a;
             border-radius: 4px;
-            font-size: 16px;
+            box-sizing: border-box;
         }
-        input::placeholder {
-            color: #cc9999;
-        }
+        
         button {
+            width: 100%;
             padding: 12px;
             background-color: #ff3333;
-            color: white;
+            color: #1a0505;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
             font-weight: bold;
-            transition: all 0.3s ease;
+            font-size: 16px;
+            margin-top: 10px;
         }
+        
         button:hover {
             background-color: #ff0000;
-            transform: scale(1.02);
         }
-        .error {
+        
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .register-link a {
             color: #ff6666;
-            text-align: center;
-            margin-top: 10px;
-            display: none;
-            background-color: rgba(255, 0, 0, 0.1);
-            padding: 8px;
-            border-radius: 4px;
+            text-decoration: none;
         }
-        .loading {
-            display: none;
-            text-align: center;
-            margin-top: 10px;
-            color: #ffcccc;
+        
+        .register-link a:hover {
+            text-decoration: underline;
         }
+        
         .hot-label {
             background-color: #ff0000;
             color: white;
@@ -78,80 +89,189 @@
             font-size: 12px;
             margin-left: 5px;
         }
+        
+        .error-message {
+            color: #ff6666;
+            background-color: rgba(255, 0, 0, 0.1);
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .ad-container {
+            width: 100%;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .ad-mobile {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .ad-desktop {
+                display: none;
+            }
+            
+            .ad-mobile {
+                display: block;
+                width: 100%;
+                overflow: hidden;
+                margin: 15px auto;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h1>CitasFree <span class="hot-label">HOT</span></h1>
-        <form id="loginForm">
-            <input type="text" id="alias" placeholder="Alias" required>
-            <input type="password" id="pin" placeholder="PIN" required>
-            <button type="submit">Entrar</button>
-        </form>
-        <div id="errorMessage" class="error">Alias o PIN incorrecto.</div>
-        <div id="loadingMessage" class="loading">Verificando credenciales...</div>
-    </div>
-
-    <!-- Cargar la versión específica de Supabase desde CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+    <h1>Chat CitasFree <span class="hot-label">HOT</span></h1>
     
+    <!-- Anuncio superior para escritorio -->
+    <div class="ad-container ad-desktop">
+        <script type="text/javascript">
+            atOptions = { 'key' : '8f88d057e1fda5f2cb45b6efe1cb51c4', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
+        </script>
+        <script type="text/javascript" src="//www.highperformanceformat.com/8f88d057e1fda5f2cb45b6efe1cb51c4/invoke.js"></script>
+    </div>
+    
+    <!-- Anuncio superior para móvil -->
+    <div class="ad-container ad-mobile">
+        <script type='text/javascript' src='//pl26408505.profitableratecpm.com/54/d4/33/54d43392e0a2c7ce4f5d866d24c24463.js'></script>
+    </div>
+    
+    <div class="login-container">
+        <h2>Iniciar Sesión</h2>
+        
+        <div id="error-message" class="error-message"></div>
+        
+        <div class="form-group">
+            <label for="alias">Nombre de Usuario:</label>
+            <input type="text" id="alias" name="alias" placeholder="Tu nombre de usuario" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" name="password" placeholder="Tu contraseña" required>
+        </div>
+        
+        <button type="button" onclick="iniciarSesion()">Conectar al Chat</button>
+        
+        <div class="register-link">
+            <p>¿No tienes cuenta? <a href="registro.html">Regístrate ahora</a></p>
+        </div>
+    </div>
+    
+    <!-- Anuncio central para todos los dispositivos -->
+    <div class="ad-container">
+        <script type="text/javascript">
+            atOptions = { 'key' : '8f88d057e1fda5f2cb45b6efe1cb51c4', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
+        </script>
+        <script type="text/javascript" src="//www.highperformanceformat.com/8f88d057e1fda5f2cb45b6efe1cb51c4/invoke.js"></script>
+    </div>
+    
+    <!-- Segundo bloque de anuncios -->
+    <div class="ad-container">
+        <script async="async" data-cfasync="false" src="//pl26408509.profitableratecpm.com/83f6589a1f5518ac29be91871ea63adf/invoke.js"></script>
+        <div id="container-83f6589a1f5518ac29be91871ea63adf"></div>
+    </div>
+    
+    <!-- Primero carga la librería de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <!-- Luego tu código -->
     <script>
-        // Esperar a que el DOM esté completamente cargado
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar el cliente de Supabase
-            const supabaseUrl = 'https://aosshivxcxlypnsbvghc.supabase.co';
-            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvc3NoaXZ4Y3hseXBuc2J2Z2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzEyODEsImV4cCI6MjA2MDUwNzI4MX0.Vrs5L1Lbw7BwgagXB0Zy5SIrOFe9wBL2fKjBP6vdXtE';
+        const supabaseUrl = 'https://aosshivxcxlypnsbvghc.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvc3NoaXZ4Y3hseXBuc2J2Z2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MzEyODEsImV4cCI6MjA2MDUwNzI4MX0.Vrs5L1Lbw7BwgagXB0Zy5SIrOFe9wBL2fKjBP6vdXtE';
+        
+        // Usar createClient desde el objeto global importado
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Verificar si ya hay una sesión activa
+        window.onload = function() {
+            const userId = localStorage.getItem('userId');
+            const userAlias = localStorage.getItem('userAlias');
             
-            // Crear el cliente usando la función global de Supabase
-            const client = supabase.createClient(supabaseUrl, supabaseKey);
+            if (userId && userAlias) {
+                // Ya hay sesión, redirigir a la página de chat
+                window.location.href = 'usuarios.html';
+            }
+        };
+        
+        // Función para iniciar sesión
+        async function iniciarSesion() {
+            const alias = document.getElementById('alias').value;
+            const password = document.getElementById('password').value;
+            const errorMessageDiv = document.getElementById('error-message');
             
-            // Elementos del DOM
-            const form = document.getElementById('loginForm');
-            const errorMsg = document.getElementById('errorMessage');
-            const loadingMsg = document.getElementById('loadingMessage');
+            // Validación básica
+            if (!alias || !password) {
+                mostrarError('Por favor completa todos los campos');
+                return;
+            }
             
-            // Agregar el evento de envío del formulario
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
+            try {
+                // Buscar usuario por alias
+                const { data, error } = await supabaseClient
+                    .from('usuarios')
+                    .select('*')
+                    .eq('alias', alias)
+                    .single();
                 
-                // Ocultar mensaje de error previo y mostrar carga
-                errorMsg.style.display = 'none';
-                loadingMsg.style.display = 'block';
-                
-                const alias = document.getElementById('alias').value.trim();
-                const pin = document.getElementById('pin').value.trim();
-                
-                try {
-                    // Realizar la consulta a Supabase
-                    const { data, error } = await client
-                        .from('usuarios')
-                        .select('*')
-                        .eq('alias', alias)
-                        .eq('pin', pin)
-                        .single();
-                    
-                    // Ocultar mensaje de carga
-                    loadingMsg.style.display = 'none';
-                    
-                    if (error || !data) {
-                        // Mostrar mensaje de error
-                        errorMsg.style.display = 'block';
-                        console.error('Error de autenticación:', error);
-                    } else {
-                        // Guardar usuario en sessionStorage y redirigir
-                        console.log('Usuario autenticado:', data);
-                        sessionStorage.setItem('usuario', JSON.stringify(data));
-                        window.location.href = 'usuarios.html';
-                    }
-                } catch (err) {
-                    // Manejar cualquier otro error
-                    loadingMsg.style.display = 'none';
-                    errorMsg.textContent = 'Error al conectar con el servidor. Inténtalo más tarde.';
-                    errorMsg.style.display = 'block';
-                    console.error('Error en login:', err);
+                if (error) {
+                    mostrarError('Error en la consulta. Inténtalo de nuevo.');
+                    console.error('Error:', error);
+                    return;
                 }
-            });
+                
+                if (!data) {
+                    mostrarError('Usuario no encontrado');
+                    return;
+                }
+                
+                // En un entorno real usarías hash de contraseñas
+                // Aquí estamos haciendo una comparación simple
+                if (data.password === password) {
+                    // Guardar información en localStorage
+                    localStorage.setItem('userId', data.id);
+                    localStorage.setItem('userAlias', data.alias);
+                    
+                    // Redirigir a la página de chat
+                    window.location.href = 'usuarios.html';
+                } else {
+                    mostrarError('Contraseña incorrecta');
+                }
+            } catch (err) {
+                mostrarError('Error al iniciar sesión');
+                console.error('Error:', err);
+            }
+        }
+        
+        // Mostrar mensaje de error
+        function mostrarError(mensaje) {
+            const errorMessageDiv = document.getElementById('error-message');
+            errorMessageDiv.textContent = mensaje;
+            errorMessageDiv.style.display = 'block';
+            
+            // Ocultar después de 5 segundos
+            setTimeout(() => {
+                errorMessageDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Manejar Enter en el campo de contraseña
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                iniciarSesion();
+            }
         });
     </script>
+    
+    <!-- Anuncio inferior para todos los dispositivos -->
+    <div class="ad-container">
+        <script type="text/javascript">
+            atOptions = { 'key' : '8f88d057e1fda5f2cb45b6efe1cb51c4', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
+        </script>
+        <script type="text/javascript" src="//www.highperformanceformat.com/8f88d057e1fda5f2cb45b6efe1cb51c4/invoke.js"></script>
+    </div>
 </body>
 </html>
