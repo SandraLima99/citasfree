@@ -1,82 +1,47 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login de Usuarios</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    form {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-      width: 300px;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #45a049;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Login - CitasFree</title>
 </head>
 <body>
+    <h1>Iniciar sesión</h1>
+    <form id="loginForm">
+        <input type="text" id="alias" placeholder="Alias" required>
+        <input type="password" id="pin" placeholder="PIN" required>
+        <button type="submit">Entrar</button>
+    </form>
 
-  <form id="login-form">
-    <h2>Iniciar sesión</h2>
-    <input type="text" id="alias" placeholder="Alias" required />
-    <input type="password" id="pin" placeholder="PIN" required />
-    <button type="submit">Entrar</button>
-  </form>
+    <!-- Primero carga la librería de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="supabaseClient.js"></script>
-  <script>
-    document.getElementById('login-form').addEventListener('submit', async function(event) {
-      event.preventDefault();
+    <!-- Después tu configuración cliente -->
+    <script src="supabaseClient.js"></script>
 
-      const alias = document.getElementById('alias').value.trim();
-      const pin = document.getElementById('pin').value.trim();
+    <!-- Luego ya tu código de login -->
+    <script>
+        const form = document.getElementById('loginForm');
 
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('alias', alias)
-        .eq('pin', pin)
-        .single();
+        form.onsubmit = async function(e) {
+            e.preventDefault();
 
-      if (error || !data) {
-        alert('Alias o PIN incorrectos.');
-        return;
-      }
+            const alias = document.getElementById('alias').value;
+            const pin = document.getElementById('pin').value;
 
-      // Guardar sesión
-      localStorage.setItem('usuario', JSON.stringify(data));
+            const { data, error } = await supabase
+                .from('usuarios')
+                .select('*')
+                .eq('alias', alias)
+                .eq('pin', pin)
+                .single();
 
-      // Redirigir
-      window.location.href = 'usuarios.html';
-    });
-  </script>
+            if (error || !data) {
+                alert('Alias o PIN incorrecto.');
+            } else {
+                sessionStorage.setItem('usuario', JSON.stringify(data));
+                window.location.href = 'usuarios.html';
+            }
+        };
+    </script>
 </body>
 </html>
