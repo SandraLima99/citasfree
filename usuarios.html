@@ -364,264 +364,204 @@
             });
         };
         
-        // Función para cargar la sesión del usuario desde localStorage
-        async function cargarSesion() {
-            const userId = localStorage.getItem('userId');
-            const userAlias = localStorage.getItem('userAlias');
-            
-            if (userId && userAlias) {
-                // Verificar que el usuario sigue existiendo en la base de datos
-                const { data, error } = await supabaseClient
-                    .from('usuarios')
-                    .select('*')
-                    .eq('id', userId)
-                    .single();
-                
-                if (data && !error) {
-                    // Establecer sesión
-                    currentUser = data;
-                    mostrarInfoUsuario();
-                    
-                    // Iniciar verificación automática de mensajes nuevos
-                    iniciarActualizacionAutomatica();
-                } else {
-                    // Si el usuario no existe, limpiar localStorage
-                    localStorage.removeItem('userId');
-                    localStorage.removeItem('userAlias');
-                    window.location.href = 'login.html'; // Redirigir al login
-                }
-            } else {
-                // Si no hay sesión, redirigir al login
-                window.location.href = 'login.html';
-            }
-        }
+      // Corrige la función cargarSesion para que actualice correctamente el objeto currentUser
+async function cargarSesion() {
+    const userId = localStorage.getItem('userId');
+    const userAlias = localStorage.getItem('userAlias');
+    
+    if (userId && userAlias) {
+        // Verificar que el usuario sigue existiendo en la base de datos
+        const { data, error } = await supabaseClient
+            .from('usuarios')
+            .select('*')
+            .eq('id', userId)
+            .single();
         
-        // Mostrar información del usuario actual
-        function mostrarInfoUsuario() {
-            document.getElementById('current-user-name').textContent = currentUser.alias;
-            document.getElementById('current-user-id').textContent = currentUser.id;
+        if (data && !error) {
+            // Establecer sesión con TODOS los datos del usuario, incluyendo foto_perfil
+            currentUser = data;
+            mostrarInfoUsuario();
             
-            // Mostrar foto de perfil si existe
-            if (currentUser.foto_perfil) {
-                document.getElementById('current-user-pic').src = currentUser.foto_perfil;
-            }
-        }
-        
-        // Actualizar foto de perfil
-        async function actualizarFotoPerfil(input) {
-            if (!currentUser) return;
-            
-            const file = input.files[0];
-            if (!file) return;
-            
-            // Validar tamaño (máximo 2MB)
-            if (file.size > 2 * 1024 * 1024) {
-                alert('La imagen es demasiado grande. Máximo 2MB.');
-                return;
-            }
-            
-            // Validar tipo
-            if (!file.type.startsWith('image/')) {
-                alert('El archivo debe ser una imagen.');
-                return;
-            }
-            
-            try {
-                // Mostrar indicador de carga
-                document.getElementById('current-user-pic').src = 'https://via.placeholder.com/50/ff3333/ffffff?text=...';
-                
-                // Crear un nombre único para el archivo
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${currentUser.id}_${Date.now()}.${fileExt}`;
-                const filePath = `perfiles/${fileName}`;
-                
-                // Subir archivo a Supabase Storage
-                const { data, error } = await supabaseClient
-                    .storage
-                    .from('fotos_perfil')
-                    .upload(filePath, file);
-                
-                if (error) {
-                    throw error;
-                }
-                
-                // Obtener URL pública del archivo
-                const { data: urlData } = await supabaseClient
-                    .storage
-                    .from('fotos_perfil')
-                    .getPublicUrl(filePath);
-                
-                const publicUrl = urlData.publicUrl;
-                
-                // Actualizar perfil del usuario
-                const { error: updateError } = await supabaseClient
-                    .from('usuarios')
-                    .update({ foto_perfil: publicUrl })
-                    .eq('id', currentUser.id);
-                
-                if (updateError) {
-                    throw updateError;
-                }
-                
-                // Actualizar la imagen mostrada
-                document.getElementById('current-user-pic').src = publicUrl;
-                
-                // Actualizar objeto de usuario actual
-                currentUser.foto_perfil = publicUrl;
-                
-                alert('Foto de perfil actualizada correctamente');
-            } catch (err) {
-                console.error('Error al actualizar foto de perfil:', err);
-                alert('Error al actualizar la foto de perfil: ' + err.message);
-                
-                // Restaurar imagen anterior
-                if (currentUser.foto_perfil) {
-                    document.getElementById('current-user-pic').src = currentUser.foto_perfil;
-                } else {
-                    document.getElementById('current-user-pic').src = 'https://via.placeholder.com/50';
-                }
-            }
-        }
-        
-        // Iniciar actualización automática de mensajes
-        function iniciarActualizacionAutomatica() {
-            // Detener cualquier intervalo existente
-            if (messageCheckInterval) {
-                clearInterval(messageCheckInterval);
-            }
-            
-            // Comprobar mensajes nuevos cada 5 segundos
-            messageCheckInterval = setInterval(function() {
-                verificarMensajesNuevos();
-            }, 5000);
-        }
-        
-        // Verificar mensajes nuevos
-        async function verificarMensajesNuevos() {
-            if (!currentUser) return;
-            
-            // Buscar mensajes más recientes que el último verificado
-            const { data, error } = await supabaseClient
-                .from('mensajes')
-                .select('*')
-                .eq('destinatario_id', currentUser.id)
-                .gt('enviado_en', lastMessageTime)
-                .order('enviado_en', { ascending: false });
-            
-            if (error) {
-                console.error('Error verificando mensajes nuevos:', error);
-                return;
-            }
-            
-            // Si hay mensajes nuevos, actualizar la vista
-            if (data && data.length > 0) {
-                // Actualizar el tiempo del último mensaje
-                lastMessageTime = new Date().toISOString();
-                
-                // Reproducir sonido o mostrar notificación aquí si lo deseas
-                
-                // Actualizar mensajes si hay un usuario seleccionado
-                if (selectedUser) {
-                    listarMensajesConUsuario(selectedUser.id);
-                } else {
-                    listarMensajes();
-                }
-                
-                // También actualizar la lista de usuarios para reflejar cambios
-                cargarUsuarios();
-            }
-        }
-        
-        // Cerrar sesión
-        function cerrarSesion() {
+            // Iniciar verificación automática de mensajes nuevos
+            iniciarActualizacionAutomatica();
+        } else {
+            // Si el usuario no existe, limpiar localStorage
             localStorage.removeItem('userId');
             localStorage.removeItem('userAlias');
-            window.location.href = 'login.html';
+            window.location.href = 'login.html'; // Redirigir al login
+        }
+    } else {
+        // Si no hay sesión, redirigir al login
+        window.location.href = 'login.html';
+    }
+}
+
+// Corrige la función actualizarFotoPerfil para que actualice correctamente el estado local
+async function actualizarFotoPerfil(input) {
+    if (!currentUser) return;
+    
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Validar tamaño (máximo 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        alert('La imagen es demasiado grande. Máximo 2MB.');
+        return;
+    }
+    
+    // Validar tipo
+    if (!file.type.startsWith('image/')) {
+        alert('El archivo debe ser una imagen.');
+        return;
+    }
+    
+    try {
+        // Mostrar indicador de carga
+        document.getElementById('current-user-pic').src = 'https://via.placeholder.com/50/ff3333/ffffff?text=...';
+        
+        // Crear un nombre único para el archivo
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${currentUser.id}_${Date.now()}.${fileExt}`;
+        const filePath = `perfiles/${fileName}`;
+        
+        // Subir archivo a Supabase Storage
+        const { data, error } = await supabaseClient
+            .storage
+            .from('fotos_perfil')
+            .upload(filePath, file);
+        
+        if (error) {
+            throw error;
         }
         
-        // Cargar lista de usuarios
-        async function cargarUsuarios() {
-            const { data, error } = await supabaseClient
-                .from('usuarios')
-                .select('*')
-                .order('alias');
-                
-            if (error) {
-                console.error('Error cargando usuarios:', error);
-                return;
-            }
+        // Obtener URL pública del archivo
+        const { data: urlData } = await supabaseClient
+            .storage
+            .from('fotos_perfil')
+            .getPublicUrl(filePath);
+        
+        const publicUrl = urlData.publicUrl;
+        
+        // Actualizar perfil del usuario en la base de datos
+        const { error: updateError } = await supabaseClient
+            .from('usuarios')
+            .update({ foto_perfil: publicUrl })
+            .eq('id', currentUser.id);
+        
+        if (updateError) {
+            throw updateError;
+        }
+        
+        // Actualizar la imagen mostrada
+        document.getElementById('current-user-pic').src = publicUrl;
+        
+        // Actualizar objeto de usuario actual
+        currentUser.foto_perfil = publicUrl;
+        
+        // IMPORTANTE: También actualizar en localStorage para preservar entre sesiones
+        localStorage.setItem('userPhotoUrl', publicUrl);
+        
+        alert('Foto de perfil actualizada correctamente');
+        
+        // Recargar la lista de usuarios para que otros vean la foto actualizada
+        await cargarUsuarios();
+        
+    } catch (err) {
+        console.error('Error al actualizar foto de perfil:', err);
+        alert('Error al actualizar la foto de perfil: ' + err.message);
+        
+        // Restaurar imagen anterior
+        if (currentUser.foto_perfil) {
+            document.getElementById('current-user-pic').src = currentUser.foto_perfil;
+        } else {
+            document.getElementById('current-user-pic').src = 'https://via.placeholder.com/50';
+        }
+    }
+}
+
+// Asegúrate que al cargar usuarios, se muestren correctamente las fotos de perfil
+async function cargarUsuarios() {
+    // Realizar consulta a la base de datos para obtener datos actualizados
+    const { data, error } = await supabaseClient
+        .from('usuarios')
+        .select('*')
+        .order('alias');
             
-            const userListDiv = document.getElementById('user-list');
-            
-            // Limpiar lista
-            userListDiv.innerHTML = '';
-            
-            if (data.length === 0) {
-                userListDiv.innerHTML = '<p>No hay usuarios registrados</p>';
-                return;
-            }
-            
-            data.forEach(user => {
-                // No mostrar al usuario actual en la lista
-                if (currentUser && user.id === currentUser.id) return;
-                
-                // Añadir a la lista visual
-                const userDiv = document.createElement('div');
-                userDiv.className = 'user-item';
-                userDiv.dataset.userId = user.id;
-                userDiv.dataset.userAlias = user.alias;
-                
-                // Añadir imagen de perfil
-                const imgElement = document.createElement('img');
-                imgElement.className = 'profile-pic';
-                
-                // Usar foto de perfil si existe, o placeholder si no
-                if (user.foto_perfil) {
-                    imgElement.src = user.foto_perfil;
-                } else {
-                    imgElement.src = 'https://via.placeholder.com/40';
-                }
-                
-                imgElement.alt = user.alias;
-                userDiv.appendChild(imgElement);
-                
-                // Añadir nombre de usuario
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = user.alias;
-                userDiv.appendChild(nameSpan);
-                
-                // Añadir evento de clic para seleccionar usuario
-                userDiv.onclick = function() {
-                    // Eliminar selección anterior
-                    document.querySelectorAll('.user-item').forEach(item => {
-                        item.classList.remove('active');
-                    });
-                    
-                    // Añadir selección a este usuario
-                    userDiv.classList.add('active');
-                    
-                    // Establecer usuario seleccionado
-                    selectedUser = {
-                        id: user.id,
-                        alias: user.alias,
-                        foto_perfil: user.foto_perfil
-                    };
-                    
-                    // Actualizar encabezado del chat
-                    document.getElementById('chat-with').textContent = user.alias;
-                    
-                    // Habilitar entrada de texto y botón de enviar
-                    document.getElementById('texto').disabled = false;
-                    document.getElementById('send-button').disabled = false;
-                    
-                    // Cargar mensajes con este usuario
-                    listarMensajesConUsuario(user.id);
-                };
-                
-                userListDiv.appendChild(userDiv);
+    if (error) {
+        console.error('Error cargando usuarios:', error);
+        return;
+    }
+    
+    const userListDiv = document.getElementById('user-list');
+    
+    // Limpiar lista
+    userListDiv.innerHTML = '';
+    
+    if (data.length === 0) {
+        userListDiv.innerHTML = '<p>No hay usuarios registrados</p>';
+        return;
+    }
+    
+    data.forEach(user => {
+        // No mostrar al usuario actual en la lista
+        if (currentUser && user.id === currentUser.id) return;
+        
+        // Añadir a la lista visual
+        const userDiv = document.createElement('div');
+        userDiv.className = 'user-item';
+        userDiv.dataset.userId = user.id;
+        userDiv.dataset.userAlias = user.alias;
+        
+        // Añadir imagen de perfil
+        const imgElement = document.createElement('img');
+        imgElement.className = 'profile-pic';
+        
+        // IMPORTANTE: Usar la URL directamente de la base de datos
+        if (user.foto_perfil) {
+            imgElement.src = user.foto_perfil;
+            // Añadir manejo de errores para casos donde la URL esté rota
+            imgElement.onerror = function() {
+                this.src = 'https://via.placeholder.com/40';
+            };
+        } else {
+            imgElement.src = 'https://via.placeholder.com/40';
+        }
+        
+        imgElement.alt = user.alias;
+        userDiv.appendChild(imgElement);
+        
+        // Añadir nombre de usuario
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = user.alias;
+        userDiv.appendChild(nameSpan);
+        
+        // Añadir evento de clic para seleccionar usuario
+        userDiv.onclick = function() {
+            // Eliminar selección anterior
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.classList.remove('active');
             });
-        }
+            
+            // Añadir selección a este usuario
+            userDiv.classList.add('active');
+            
+            // Establecer usuario seleccionado con TODOS sus datos
+            selectedUser = user; // Guardar todo el objeto usuario
+            
+            // Actualizar encabezado del chat
+            document.getElementById('chat-with').textContent = user.alias;
+            
+            // Habilitar entrada de texto y botón de enviar
+            document.getElementById('texto').disabled = false;
+            document.getElementById('send-button').disabled = false;
+            
+            // Cargar mensajes con este usuario
+            listarMensajesConUsuario(user.id);
+        };
         
+        userListDiv.appendChild(userDiv);
+    });
+}
         // Enviar mensaje
         async function enviarMensaje() {
             if (!currentUser) {
