@@ -157,12 +157,12 @@
             display: inline-block;
         }
 
-        .vip-room-image {
+  .vip-room-image {
     width: 100%;
     border-radius: 5px;
     margin-bottom: 10px;
-    max-height: 150px;
-    object-fit: cover;
+    max-height: none; /* Quitar la restricción de altura */
+    object-fit: contain; /* Mostrar la imagen completa */
 }
         
         /* Estilos para salas VIP */
